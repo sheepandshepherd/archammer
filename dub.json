@@ -1,0 +1,77 @@
+{
+	"name": "archammer",
+	"description": "File format conversion tools for Dark Forces",
+	"authors": ["sheepandshepherd"],
+	"copyright": "Copyright © 2016 sheepandshepherd",
+	"license": "GPL-2.0 or later",
+	"versions": ["gl3n","Derelict3"],
+	"targetPath": "bin",
+	"copyFiles":["res/*","LICENSE*","README*"],
+	"dependencies": {
+		"derelict-assimp3": "~>1.0.1",
+		"archammer:arcutil": "*",
+		"archammer:arc3do": "*",
+		"gtk-d": "~>3.2.2"
+	},
+	"subPackages": [
+		{
+			"name": "arcutil",
+			"description": "ArcHammer general utilities",
+			"authors": ["sheepandshepherd"],
+			"copyright": "Copyright © 2016 sheepandshepherd",
+			"license": "MIT",
+			"sourcePaths":["srcutil"],
+			"importPaths":["srcutil"],
+			"targetPath": "bin",
+			"targetType":"library",
+			"dependencies": {
+				"pegged": "~>0.2.1",
+			},
+		},
+		{
+			"name": "arc3do",
+			"description": "ArcHammer 3do library",
+			"authors": ["sheepandshepherd"],
+			"copyright": "Copyright © 2016 sheepandshepherd",
+			"license": "MIT",
+			"sourcePaths":["src3do"],
+			"importPaths":["src3do"],
+			"targetPath": "bin",
+			"targetType":"library",
+			"dependencies": {
+				"archammer:arcutil": "*",
+				"derelict-assimp3": "~>1.0.1",
+				"pegged": "~>0.2.1",
+			},
+		},
+		{
+			"name": "arcpal",
+			"description": "ArcHammer PAL library",
+			"authors": ["sheepandshepherd"],
+			"copyright": "Copyright © 2016 sheepandshepherd",
+			"license": "MIT",
+			"sourcePaths":["srcpal"],
+			"importPaths":["srcpal"],
+			"targetPath": "bin",
+			"targetType":"library",
+			"dependencies": {
+				
+			},
+		},
+		{
+			"name": "arcbm",
+			"description": "ArcHammer BM library",
+			"authors": ["sheepandshepherd"],
+			"copyright": "Copyright © 2016 sheepandshepherd",
+			"license": "MIT",
+			"sourcePaths":["srcbm"],
+			"importPaths":["srcbm"],
+			"targetPath": "bin",
+			"targetType":"library",
+			"dependencies": {
+				"derelict-fi": "~>2.0.2",
+				"archammer:arcpal": "*",
+			},
+		}
+	],
+}

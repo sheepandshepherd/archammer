@@ -1,0 +1,14 @@
+.gitignore.part
+.dub/
+dub.selections.json
+dub.userprefs
+docs.json
+__dummy.html
+*.o
+*.obj
+bin/
+docs/
+work/
+.directory
+.project
+archammer.settings
