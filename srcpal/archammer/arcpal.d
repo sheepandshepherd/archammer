@@ -23,6 +23,8 @@ SOFTWARE.
 
 module archammer.arcpal;
 
+import archammer.util;
+
 //import derelict.freeimage.freeimage;
 /++
  + A static palette.
@@ -31,11 +33,10 @@ module archammer.arcpal;
 class ArcPal
 {
 	string name = "pal";
-	/// colors are [R,G,B] and range from [0..64).
-	ubyte[3][256] palette;
+	Color[256] palette;
 
 	/// TODO: RGB comparison is primitive. Convert to HSL or better algorithm instead.
-	ubyte mostSimilarIndex(in ubyte[3] color)
+	ubyte mostSimilarIndex(in Color color)
 	{
 		import std.math : abs;
 		ubyte index = 0;
@@ -99,6 +100,8 @@ class ArcPal
 		foreach(ci; 0..256)
 		{
 			foreach(cic; 0..3) ret.palette[ci][cic] = data[3*ci+cic];
+			ret.palette[ci].a = 64; // default full opacity
+			ret.palette[ci].index = ci; 
 		}
 		return ret;
 	}

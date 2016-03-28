@@ -85,3 +85,34 @@ nothrow string preprocessLineComments(string commentsString = "#")(string conten
 	return text(rb[0]);
 }
 
+
+/++
+Dark Forces Color
+Each component (r,g,b,a) is a 6-bit compessed ubyte, ranging 0..64, as in DF.
+Also, the 8-bit field `index` points to a palette color in paletted textures.
++/
+struct Color
+{
+	import std.bitmanip, std.meta;
+	mixin(bitfields!(
+		ubyte, "r", 6,
+		ubyte, "g", 6,
+		ubyte, "b", 6,
+		ubyte, "a", 6,
+		ubyte, "index", 8
+	));
+	
+	alias components = AliasSeq!(r, g, b, a, index);
+	
+	ubyte opIndex(size_t component)
+	{
+		return [components][component];
+	}
+	void opIndexAssign(ubyte value, size_t component)
+	{
+		[components][component] = value;
+	}
+}
+
+
+

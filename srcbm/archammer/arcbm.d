@@ -28,9 +28,7 @@ import std.typecons : Tuple;
 import derelict.freeimage.freeimage;
 //import std.experimental.ndslice;
 
-import archammer.arcpal;
-
-alias color = ubyte[4];
+import archammer.util, archammer.arcpal;
 
 class ArcBm
 {
@@ -42,25 +40,25 @@ class ArcBm
 	size_t w, h;
 	union
 	{
-		color[] colors; /// color data for a SingleBM (incl compressed)
+		Color[] colors; /// color data for a SingleBM (incl compressed)
 		SubBm[] subBms; /// subBms in a MultipleBM
 	}
 	/// TODO
 	struct SubBm
 	{
 		size_t w, h;
-		color[] colors;
+		Color[] colors;
 	}
 
 	/// hopefully $ref should allow [x,y][ci]=value
-	ref color opIndex(size_t x, size_t y)
+	ref Color opIndex(size_t x, size_t y)
 	{
 		if(multiple) throw new Exception("XY index on multiple BM");
 		if(y >= h || x >= w) throw new Exception("XY index out of bounds");
 		return colors[h*x+y];
 	}
 
-	color opIndexAssign(color value, size_t x, size_t y)
+	Color opIndexAssign(Color value, size_t x, size_t y)
 	{
 		if(multiple) throw new Exception("XY indexAssign on multiple BM");
 		if(y >= h || x >= w) throw new Exception("XY indexAssign out of bounds");
@@ -139,7 +137,7 @@ class ArcBm
 		ret.multiple = false;
 		ret.w = w;
 		ret.h = h;
-		ret.colors = new color[w*h];
+		ret.colors = new Color[w*h];
 
 		foreach(x; 0..w) foreach(y; 0..h)
 		{
@@ -148,6 +146,7 @@ class ArcBm
 			ret[x,y][0] = cast(ubyte)(quad.rgbRed/4);
 			ret[x,y][1] = cast(ubyte)(quad.rgbGreen/4);
 			ret[x,y][2] = cast(ubyte)(quad.rgbBlue/4);
+			ret[x,y].a = 64; // default full opacity
 		}
 		return ret;
 	}
