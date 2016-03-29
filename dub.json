@@ -11,6 +11,8 @@
 		"derelict-assimp3": "~>1.0.1",
 		"archammer:arcutil": "*",
 		"archammer:arc3do": "*",
+		"archammer:arcpal": "*",
+		"archammer:arcbm": "*",
 		"gtk-d": "~>3.2.2"
 	},
 	"subPackages": [
@@ -55,7 +57,7 @@
 			"targetPath": "bin",
 			"targetType":"library",
 			"dependencies": {
-				
+				"archammer:arcutil": "*",
 			},
 		},
 		{
@@ -69,6 +71,7 @@
 			"targetPath": "bin",
 			"targetType":"library",
 			"dependencies": {
+				"archammer:arcutil": "*",
 				"derelict-fi": "~>2.0.2",
 				"archammer:arcpal": "*",
 			},

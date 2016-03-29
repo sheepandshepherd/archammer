@@ -28,8 +28,8 @@ debug import std.stdio;
 import archammer.ui.util;
 import archammer.util;
 import archammer.arc3do;
-///import archammer.arcpal;
-///import archammer.arcbm;
+import archammer.arcpal;
+import archammer.arcbm;
 
 import derelict.assimp3.assimp;
 
@@ -407,7 +407,7 @@ class File3do : File
 	{
 		_outputList = createStringListStore(_outputTypes);
 	}
-	static immutable(string[]) _outputTypes = ["","3DO","OBJ"];
+	static immutable(string[]) _outputTypes = ["","3DO (Dark Forces)","OBJ"];
 	static ListStore _outputList;
 	override pure @property string type() { return "Mesh"; }
 	override pure @property const(string[]) outputTypes() { return _outputTypes; }
@@ -452,6 +452,64 @@ class File3do : File
 			if(exists(savePath)) remove(savePath);
 			debug writeln(savePath);
 			write(savePath, file.wavefrontObj());
+			break;
+		default: /// invalid format, or 0/"blank" selected
+			
+			break;
+		}
+	}
+	
+	/// TODO: OpenGL handles for this object. Generate at load so we can display in the View3do tab
+}
+
+class FilePal : File
+{
+	static this()
+	{
+		_outputList = createStringListStore(_outputTypes);
+	}
+	static immutable(string[]) _outputTypes = ["","PAL (Dark Forces)","GPL (Gimp)"];
+	static ListStore _outputList;
+	override pure @property string type() { return "Palette"; }
+	override pure @property const(string[]) outputTypes() { return _outputTypes; }
+	override @property ListStore outputList() { return _outputList; }
+	
+	ArcPal file;
+	
+	this(string path, ArcPal file)
+	{
+		super(path);
+		this.file = file;
+	}
+	
+	override void save(string name, int format, bool local = true)
+	{
+		if(format == 0) return; // no format set
+		import std.path, std.file;
+		import std.string : toUpper;
+		string savePath;
+		if(local && path !is null)
+		{
+			savePath = buildPath(path.dirName, name.toUpper);
+		}
+		else
+		{
+			savePath = buildPath(thisExePath.dirName, name.toUpper);
+		}
+		
+		switch(format)
+		{
+		case 1: /// PAL
+			savePath = savePath.setExtension("PAL");
+			if(exists(savePath)) remove(savePath);
+			debug writeln(savePath);
+			write(savePath, file.data());
+			break;
+		case 2: /// Gimp
+			savePath = savePath.setExtension("GPL");
+			if(exists(savePath)) remove(savePath);
+			debug writeln(savePath);
+			write(savePath, file.gimp());
 			break;
 		default: /// invalid format, or 0/"blank" selected
 			

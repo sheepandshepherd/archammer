@@ -70,7 +70,7 @@ class ArcBm
 	{
 		foreach(x; 0..w) foreach(y; 0..h)
 		{
-			this[x,y][3] = palette.mostSimilarIndex(this[x,y][0..3]);
+			this[x,y][3] = palette.mostSimilarIndex(this[x,y]);
 		}
 	}
 
@@ -146,7 +146,7 @@ class ArcBm
 			ret[x,y][0] = cast(ubyte)(quad.rgbRed/4);
 			ret[x,y][1] = cast(ubyte)(quad.rgbGreen/4);
 			ret[x,y][2] = cast(ubyte)(quad.rgbBlue/4);
-			ret[x,y].a = 64; // default full opacity
+			ret[x,y].a = 63; // default full opacity
 		}
 		return ret;
 	}

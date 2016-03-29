@@ -104,7 +104,7 @@ struct Color
 	
 	alias components = AliasSeq!(r, g, b, a, index);
 	
-	ubyte opIndex(size_t component)
+	ubyte opIndex(size_t component) const
 	{
 		return [components][component];
 	}
