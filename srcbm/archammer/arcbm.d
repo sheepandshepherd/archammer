@@ -30,8 +30,13 @@ import derelict.freeimage.freeimage;
 
 import archammer.util, archammer.arcpal;
 
-class ArcBm
+class ArcBm : Savable
 {
+	@property const(SaveFormat[]) saveFormats() { return [
+		SaveFormat("BM","BM (Dark Forces)",&data),
+		SaveFormat("GIF","GIF", cast(void[] delegate()) &gif )
+		];}
+	
 	bool transparent = false;
 	ubyte transparencyBit = 0; /// on weapons it's 8. otherwise it's 0.
 	bool multiple = false;
@@ -74,7 +79,7 @@ class ArcBm
 		}
 	}
 
-	ubyte[] data()
+	void[] data()
 	{
 		import std.array : appender;
 		import std.bitmanip;
@@ -101,10 +106,15 @@ class ArcBm
 			// columns, from bottom to top
 			foreach(x; 0..w) foreach(y; 0..h) 
 			{
-				ret.put(this[x,y][3]);
+				ret.put(this[x,y].index);
 			}
 		}
 		return ret.data;
+	}
+	
+	void[] gif()
+	{
+		return null;
 	}
 
 	/++static ArcBm loadData(ubyte[] data, ArcPal palette = ArcPal.secbase)
