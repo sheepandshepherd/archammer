@@ -23,7 +23,7 @@ SOFTWARE.
 
 module archammer.util;
 
-import pegged.peg : ParseTree;
+import std.traits;
 
 /// ParseTree navigation convenience function.
 /// Gets subnodes of $(PARAM p) recursively by the specified $(PARAM indices).
@@ -38,13 +38,14 @@ import pegged.peg : ParseTree;
 /// 	indices = variadic array of child indices to navigate
 /// 
 /// Returns: the subnode, if found, or ParseTree() if any indices are out of bounds.
-nothrow ParseTree ch(ParseTree p, size_t[] indices ...)
+nothrow TreeType ch(TreeType)(TreeType p, size_t[] indices ...)
+if( is(TreeType == struct) && hasMember!(TreeType, "children") ) // duck-typing ParseTree is questionable, but allows dropping Pegged dependency in arcutil.
 {
-	ParseTree pc = p;
+	TreeType pc = p;
 	foreach(n; indices)
 	{
-		if(pc.children is null) return ParseTree();
-		if(pc.children.length <= n) return ParseTree(); // null tree
+		if(pc.children is null) return TreeType();
+		if(pc.children.length <= n) return TreeType(); // null tree
 		pc = pc.children[n];
 	}
 	return pc;

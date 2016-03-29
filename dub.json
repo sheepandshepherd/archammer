@@ -27,7 +27,7 @@
 			"targetPath": "bin",
 			"targetType":"library",
 			"dependencies": {
-				"pegged": "~>0.2.1",
+				
 			},
 		},
 		{
