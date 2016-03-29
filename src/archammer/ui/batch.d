@@ -178,9 +178,11 @@ class Batch : Box
 		scope(exit) fileChooser.destroy();
 		fileChooser.setSelectMultiple(true);
 		/// add all the filters of loadable files:
-		fileChooser.addFilter(FileFilters.all);
-		fileChooser.addFilter(FileFilters.assimp);
-		fileChooser.addFilter(FileFilters.arc3do);
+		foreach(ref ff; [AllFileFilters])
+		{
+			fileChooser.addFilter(ff);
+		}
+		
 		fileChooser.setModal(true);
 		fileChooser.setLocalOnly(true);
 		
@@ -233,6 +235,12 @@ class Batch : Box
 				auto arc3do = Arc3do.loadMesh(filePath);
 				auto fe = addFile(new File3do(filePath, arc3do));
 				fe.outputType.setActive(1); // default to 3DO export
+			}
+			else if( FileFilters.arcPal.matchFile(filePath) )
+			{
+				auto arcPal = ArcPal.load(filePath);
+				auto fe = addFile(new FilePal(filePath, arcPal));
+				fe.outputType.setActive(2);
 			}
 		}
 		catch(Exception e)
@@ -424,25 +432,6 @@ abstract class File
 		savePath = savePath.setExtension(saveFormat.extension);
 		if(exists(savePath)) remove(savePath);
 		write(savePath, saveFormat.dataFunction());
-		
-		/+switch(format)
-		{
-		case 1: /// 3DO
-			savePath = savePath.setExtension("3DO");
-			if(exists(savePath)) remove(savePath);
-			debug writeln(savePath);
-			write(savePath, file.saveFormats[0].dataFunction());///file.data());
-			break;
-		case 2: /// OBJ
-			savePath = savePath.setExtension("OBJ");
-			if(exists(savePath)) remove(savePath);
-			debug writeln(savePath);
-			write(savePath, file.wavefrontObj());
-			break;
-		default: /// invalid format, or 0/"blank" selected
-			
-			break;
-		}+/
 	}
 	
 }

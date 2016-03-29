@@ -20,6 +20,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 /// Arc Hammer UI utilities
 module archammer.ui.util;
 
+import archammer.util;
+
+import std.traits, std.meta;
 debug import std.stdio : writeln;
 
 import gtk.FileFilter;
@@ -43,13 +46,49 @@ class ArcFilter : FileFilter
 	}
 }
 
+
+
+
+private template FilterMember(string MS)
+{
+	static if( __traits(compiles, mixin("typeof(FileFilters."~MS~")")))
+	{
+		mixin("alias M = typeof(FileFilters."~MS~");");
+		static if( is(M) && is(M : ArcFilter) )
+		{
+			enum bool FilterMember = true;
+		}
+		else enum bool FilterMember = false;
+	}
+	else enum bool FilterMember = false;
+}
+private template MapMember(string MS)
+{
+	static if( __traits(compiles, mixin("typeof(FileFilters."~MS~")")))
+	{
+		mixin("alias M = typeof(FileFilters."~MS~");");
+		mixin("alias m = FileFilters."~MS~";");
+		static if( is(M) && is(M : ArcFilter) )
+		{
+			alias MapMember = m;
+		}
+	}
+}
+
+alias AllFileFilters = staticMap!( MapMember, Filter!(FilterMember, __traits(allMembers, FileFilters)) );
+
 static class FileFilters
 {
 static:
 	ArcFilter all; /// *.*
 	ArcFilter assimp; /// all mesh types importable by ASSIMP
 	ArcFilter arc3do; /// DF 3DO
-	ArcFilter obj; /// wavefront OBJ
+	//ArcFilter obj; /// wavefront OBJ
+	ArcFilter arcPal; /// DF PAL
+	ArcFilter gimpPal; /// Gimp palette
+	ArcFilter arcBm; /// DF BM
+	ArcFilter texture; /// FreeImage texture
+	
 	
 	void init()
 	{
@@ -81,9 +120,25 @@ static:
 		arc3do.setName("Mesh (Dark Forces 3DO) - *.3DO");
 		arc3do.add("*.3[dD][oO]");
 		
-		obj = new ArcFilter();
+		/+obj = new ArcFilter();
 		obj.setName("Mesh (Wavefront OBJ)");
-		obj.add("*.[oO][bB][jJ]");
+		obj.add("*.[oO][bB][jJ]");+/
+		
+		arcPal = new ArcFilter();
+		arcPal.setName("Palette (Dark Forces PAL) - *.PAL");
+		arcPal.add("*.[pP][aA][lL]");
+		
+		gimpPal = new ArcFilter();
+		gimpPal.setName("Palette (Gimp GPL) - *.GPL");
+		gimpPal.add("*.[gG][pP][lL]");
+		
+		arcBm = new ArcFilter();
+		arcBm.setName("Texture (Dark Forces BM) - *.BM");
+		arcBm.add("*.[bB][mM]");
+		
+		texture = new ArcFilter();
+		texture.setName("Texture (FreeImage) - *.GIF; etc");
+		texture.add("*.[gG][iI][fF]"); /// TODO: get from FreeImage instead of hard-coding
 	}
 }
 
