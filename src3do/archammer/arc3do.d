@@ -32,8 +32,11 @@ import pegged.grammar, pegged.peg;
  + A 3do mesh.
  + 
  +/
-class Arc3do
+class Arc3do : Savable
 {
+	@property const(SaveFormat[]) saveFormats() { return [  SaveFormat("3DO","3DO (Dark Forces)",cast(void[] delegate()) &data),
+		SaveFormat("OBJ","OBJ", cast(void[] delegate()) &wavefrontObj )  ]; }
+	
 	/// Polygon shading type
 	enum Shading : ubyte
 	{

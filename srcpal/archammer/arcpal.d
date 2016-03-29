@@ -30,10 +30,13 @@ import archammer.util;
  + A static palette.
  + 
  +/
-class ArcPal
+class ArcPal : Savable
 {
 	string name = "pal";
 	Color[256] palette;
+	
+	@property const(SaveFormat[]) saveFormats() { return [  SaveFormat("PAL","Pal (Dark Forces)",&data),
+		SaveFormat("GPL","GPL (Gimp)", cast(void[] delegate()) &gimp )  ]; }
 
 	/// TODO: RGB comparison is primitive. Convert to HSL or better algorithm instead.
 	ubyte mostSimilarIndex(in Color color)
@@ -57,7 +60,7 @@ class ArcPal
 		return index;
 	}
 	
-	ubyte[] data()
+	void[] data()
 	{
 		ubyte[] ret = new ubyte[768];
 		foreach(ci, c; palette)

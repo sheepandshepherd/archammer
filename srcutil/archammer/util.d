@@ -116,3 +116,24 @@ struct Color
 
 
 
+
+
+
+/++
+Generic save format for files
++/
+struct SaveFormat
+{
+	string extension; /// filename extension
+	string name; /// name of the format displayed in the UI
+	void[] delegate() dataFunction; /// the function to call when saving
+}
+
+
+interface Savable
+{
+	@property const(SaveFormat[]) saveFormats();
+}
+
+
+
