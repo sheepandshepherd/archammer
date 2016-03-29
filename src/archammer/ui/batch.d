@@ -291,7 +291,7 @@ class Batch : Box
 		Image thumbnail;
 		Entry name;
 		
-		ComboBox outputType;
+		ComboBoxText outputType;
 		Button convertButton;
 		
 		this(File file)
@@ -327,18 +327,20 @@ class Batch : Box
 			
 			auto outBox = new Box(Orientation.HORIZONTAL, 0);
 			box.add(outBox);
-			outputType = new ComboBox(file.outputList(),false);
+			outputType = new ComboBoxText(false);
+			outputType.appendText("");
+			foreach(sf; file.file.saveFormats)
+			{
+				outputType.appendText(sf.name);
+			}
 			
 			convertButton = new Button("Save");
 			convertButton.setName("saveFile"); // green background
 			convertButton.addOnClicked( (b)=>convert() );
 			
-			auto outputTypeCell = new CellRendererText();
-			outputType.packStart(outputTypeCell, false);
-			outputType.addAttribute(outputTypeCell, "text", 0);
 			outputType.setTitle("Format");
 			outputType.setTooltipText("File format to save in (or blank to leave this file unmodified)");
-			outputType.addOnChanged(delegate void(ComboBox c)
+			outputType.addOnChanged(delegate void(ComboBoxText c)
 				{
 					convertButton.setSensitive(c.getActive() != 0);
 				});
@@ -376,10 +378,9 @@ class Batch : Box
 /// File data for batch window
 abstract class File
 {
-	abstract pure @property string type(); /// the file type (not format)
-	abstract pure @property const(string[]) outputTypes();
-	abstract @property ListStore outputList();
 	immutable string path; // input path, or null if it's a new file
+	abstract pure @property string type(); /// the file type (not format)
+	
 	@property string baseName()
 	{
 		import std.path;
@@ -393,42 +394,23 @@ abstract class File
 		this.path = path;
 	}
 	
+	Savable file;
+	
 	/// Save the file.
 	/// params:
 	/// 	name = the filename without directories or extension to use for saving
 	/// 	format = the id of the file format to save in (from the formats specified in outputTypes)
 	/// 	local = whether to save in the same directory as the input. Otherwise, file is saved in Arc Hammer output directory.
-	void save(string name, int format, bool local = true);
-}
-
-class File3do : File
-{
-	static this()
+	final void save(string name, int format, bool local = true)
 	{
-		_outputList = createStringListStore(_outputTypes);
-	}
-	static immutable(string[]) _outputTypes = ["","3DO (Dark Forces)","OBJ"];
-	static ListStore _outputList;
-	override pure @property string type() { return "Mesh"; }
-	override pure @property const(string[]) outputTypes() { return _outputTypes; }
-	override @property ListStore outputList() { return _outputList; }
-	
-	Arc3do file;
-	
-	this(string path, Arc3do file)
-	{
-		super(path);
-		this.file = file;
-		
-		// TODO: generate OpenGL stuff
-	}
-	
-	override void save(string name, int format, bool local = true)
-	{
-		if(format == 0) return; // no format set
-		debug writeln("Saving \"",name,"\" of format ",format,(local?" locally":" in ArcHammer dir"));
 		import std.path, std.file;
 		import std.string : toUpper;
+		
+		if(format == 0) return; // no format set
+		format -= 1; // ignore the "blank" option that's index 0 in the UI; `format` should match the file class's saveFormats array
+		assert(format < file.saveFormats.length);
+		auto saveFormat = file.saveFormats[format];
+		
 		string savePath;
 		if(local && path !is null)
 		{
@@ -439,13 +421,17 @@ class File3do : File
 			savePath = buildPath(thisExePath.dirName, name.toUpper);
 		}
 		
-		switch(format)
+		savePath = savePath.setExtension(saveFormat.extension);
+		if(exists(savePath)) remove(savePath);
+		write(savePath, saveFormat.dataFunction());
+		
+		/+switch(format)
 		{
 		case 1: /// 3DO
 			savePath = savePath.setExtension("3DO");
 			if(exists(savePath)) remove(savePath);
 			debug writeln(savePath);
-			write(savePath, file.data());
+			write(savePath, file.saveFormats[0].dataFunction());///file.data());
 			break;
 		case 2: /// OBJ
 			savePath = savePath.setExtension("OBJ");
@@ -456,7 +442,23 @@ class File3do : File
 		default: /// invalid format, or 0/"blank" selected
 			
 			break;
-		}
+		}+/
+	}
+	
+}
+
+class File3do : File
+{
+	override pure @property string type() { return "Mesh"; }
+	
+	@property Arc3do file3do() { return cast(Arc3do)file; }
+	
+	this(string path, Arc3do file)
+	{
+		super(path);
+		this.file = file;
+		
+		// TODO: generate OpenGL stuff
 	}
 	
 	/// TODO: OpenGL handles for this object. Generate at load so we can display in the View3do tab
@@ -464,84 +466,26 @@ class File3do : File
 
 class FilePal : File
 {
-	static this()
-	{
-		_outputList = createStringListStore(_outputTypes);
-	}
-	static immutable(string[]) _outputTypes = ["","PAL (Dark Forces)","GPL (Gimp)"];
-	static ListStore _outputList;
 	override pure @property string type() { return "Palette"; }
-	override pure @property const(string[]) outputTypes() { return _outputTypes; }
-	override @property ListStore outputList() { return _outputList; }
 	
-	ArcPal file;
+	@property ArcPal filePal() { return cast(ArcPal)file; }
 	
 	this(string path, ArcPal file)
 	{
 		super(path);
 		this.file = file;
 	}
-	
-	override void save(string name, int format, bool local = true)
-	{
-		if(format == 0) return; // no format set
-		import std.path, std.file;
-		import std.string : toUpper;
-		string savePath;
-		if(local && path !is null)
-		{
-			savePath = buildPath(path.dirName, name.toUpper);
-		}
-		else
-		{
-			savePath = buildPath(thisExePath.dirName, name.toUpper);
-		}
-		
-		switch(format)
-		{
-		case 1: /// PAL
-			savePath = savePath.setExtension("PAL");
-			if(exists(savePath)) remove(savePath);
-			debug writeln(savePath);
-			write(savePath, file.data());
-			break;
-		case 2: /// Gimp
-			savePath = savePath.setExtension("GPL");
-			if(exists(savePath)) remove(savePath);
-			debug writeln(savePath);
-			write(savePath, file.gimp());
-			break;
-		default: /// invalid format, or 0/"blank" selected
-			
-			break;
-		}
-	}
-	
-	/// TODO: OpenGL handles for this object. Generate at load so we can display in the View3do tab
 }
 
+version(none) // remove this until it's actually implemented
 class FileBm : File
 {
-	static this()
-	{
-		_outputList = createStringListStore(_outputTypes);
-	}
-	static immutable(string[]) _outputTypes = ["","BM","BMP","PNG","JPG","GIF"];
-	static ListStore _outputList;
 	override pure @property string type() { return "Texture"; }
-	override pure @property const(string[]) outputTypes() { return _outputTypes; }
-	override @property ListStore outputList() { return _outputList; }
 	
-	//ArcBm file;
-	this(string path)//, ArcBm file)
+	this(string path, ArcBm file)
 	{
-		super(path);//this.path = path;
-		//this.file = file;
-	}
-	
-	override void save(string name, int format, bool local = true)
-	{
-		// TODO
+		super(path);
+		this.file = file;
 	}
 	
 	/// TODO: freeimage handles
