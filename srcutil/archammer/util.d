@@ -113,6 +113,15 @@ struct Color
 	{
 		[components][component] = value;
 	}
+	
+	this(ubyte r, ubyte g, ubyte b, ubyte a, ubyte index)
+	{
+		this.r = r;
+		this.g = g;
+		this.b = b;
+		this.a = a;
+		this.index = index;
+	}
 }
 
 

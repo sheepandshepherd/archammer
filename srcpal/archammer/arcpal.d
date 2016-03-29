@@ -25,6 +25,8 @@ module archammer.arcpal;
 
 import archammer.util;
 
+debug import std.stdio : writeln;
+
 //import derelict.freeimage.freeimage;
 /++
  + A static palette.
@@ -35,7 +37,8 @@ class ArcPal : Savable
 	string name = "pal";
 	Color[256] palette;
 	
-	@property const(SaveFormat[]) saveFormats() { return [  SaveFormat("PAL","Pal (Dark Forces)",&data),
+	@property const(SaveFormat[]) saveFormats() { return [
+		SaveFormat("PAL","PAL (Dark Forces)",&data),
 		SaveFormat("GPL","GPL (Gimp)", cast(void[] delegate()) &gimp )  ]; }
 
 	/// TODO: RGB comparison is primitive. Convert to HSL or better algorithm instead.
@@ -115,9 +118,7 @@ class ArcPal : Savable
 		auto ret = new ArcPal();
 		foreach(ci; 0..256)
 		{
-			foreach(cic; 0..3) ret.palette[ci][cic] = data[3*ci+cic];
-			ret.palette[ci].a = 63; // default full opacity
-			ret.palette[ci].index = cast(ubyte)ci; 
+			ret.palette[ci] = Color(data[3*ci], data[3*ci+1], data[3*ci+2], 63, cast(ubyte)ci);
 		}
 		return ret;
 	}
