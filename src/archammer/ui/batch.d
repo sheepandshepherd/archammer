@@ -121,7 +121,7 @@ class Batch : Box
 		headerOutHBox.packStart(headerOutputDirectory,true,true,2);
 		headerOutputDirectory.appendText("Same as inputs");
 		headerOutputDirectory.appendText("Arc Hammer directory");
-		headerOutputDirectory.setActive(0);
+		headerOutputDirectory.setActive(1);
 		
 		fileBox = new Box(Orientation.VERTICAL, 2);
 		auto fileScroll = new ScrolledWindow(fileBox);
@@ -240,6 +240,12 @@ class Batch : Box
 			{
 				auto arcPal = ArcPal.load(filePath);
 				auto fe = addFile(new FilePal(filePath, arcPal));
+				fe.outputType.setActive(2);
+			}
+			else if( FileFilters.arcBm.matchFile(filePath) )
+			{
+				auto arcBm = ArcBm.load(filePath);
+				auto fe = addFile(new FileBm(filePath, arcBm));
 				fe.outputType.setActive(2);
 			}
 		}
@@ -466,7 +472,6 @@ class FilePal : File
 	}
 }
 
-version(none) // remove this until it's actually implemented
 class FileBm : File
 {
 	override pure @property string type() { return "Texture"; }
