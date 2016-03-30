@@ -40,7 +40,18 @@ class ArcPal : Savable
 	@property const(SaveFormat[]) saveFormats() { return [
 		SaveFormat("PAL","PAL (Dark Forces)",&data),
 		SaveFormat("GPL","GPL (Gimp)", cast(void[] delegate()) &gimp )  ]; }
-
+	
+	Color opIndex(ubyte id) const
+	{
+		return palette[cast(size_t)id];
+	}
+	
+	Color opIndexAssign(Color value, ubyte id)
+	{
+		palette[cast(size_t)id] = value;
+		return value;
+	}
+	
 	/// TODO: RGB comparison is primitive. Convert to HSL or better algorithm instead.
 	ubyte mostSimilarIndex(in Color color)
 	{

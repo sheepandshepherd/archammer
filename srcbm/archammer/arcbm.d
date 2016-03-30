@@ -70,12 +70,20 @@ class ArcBm : Savable
 		colors[h*x+y] = value;
 		return value;
 	}
-
-	void applyPalette(ArcPal palette)
+	
+	void setPaletteIndicesFromColors(ArcPal palette)
 	{
 		foreach(x; 0..w) foreach(y; 0..h)
 		{
 			this[x,y][3] = palette.mostSimilarIndex(this[x,y]);
+		}
+	}
+	
+	void setColorsFromPaletteIndices(ArcPal palette)
+	{
+		foreach(x; 0..w) foreach(y; 0..h)
+		{
+			foreach(comp; 0..3) this[x,y][comp] = palette[this[x,y].index][comp];
 		}
 	}
 
