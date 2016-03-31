@@ -54,6 +54,8 @@ import gtk.CheckButton;
 import gtk.ScrolledWindow;
 import gtk.Frame;
 import gtk.Image;
+import glib.Bytes;
+import gdkpixbuf.Pixbuf;
 import gtk.Entry;
 
 import glib.ListG, glib.ListSG;
@@ -319,7 +321,9 @@ class Batch : Box
 			box.setBorderWidth(2);
 			auto inBox = new Box(Orientation.HORIZONTAL, 0);
 			box.add(inBox);
+			
 			thumbnail = new Image();
+			
 			string nameText = file.path?file.baseName:"new";
 			name = new Entry(nameText,8);
 			auto viewButton = new Button("View");
@@ -362,6 +366,8 @@ class Batch : Box
 			
 			outBox.packStart(outputType, true, true, 2);
 			outBox.packStart(convertButton, false, false, 2);
+			
+			refresh();
 		}
 		
 		/// save this entry's file using the settings specified in the UI
@@ -375,7 +381,11 @@ class Batch : Box
 		/// update the GTK-D widgets
 		void refresh()
 		{
-			
+			if(file.thumbnail is null) thumbnail.setFromIconName("document-new", IconSize.DND);
+			else
+			{
+				thumbnail.setFromPixbuf(file.thumbnail);
+			}
 		}
 	}
 	
@@ -394,6 +404,11 @@ abstract class File
 {
 	immutable string path; // input path, or null if it's a new file
 	abstract pure @property string type(); /// the file type (not format)
+	
+	/++
+	32x32 Pixbuf to be used in the UI thumbnail, or null to use a default icon.
+	+/
+	Pixbuf thumbnail = null;
 	
 	@property string baseName()
 	{
@@ -465,10 +480,38 @@ class FilePal : File
 	
 	@property ArcPal filePal() { return cast(ArcPal)file; }
 	
+	Bytes data;
+	
 	this(string path, ArcPal file)
 	{
+		import std.range;
+		import std.c.stdlib : malloc, free;
 		super(path);
 		this.file = file;
+		auto palBm = ArcBm.paletteBm(file);
+		
+		ubyte[] _data = (cast(ubyte*)malloc(256*4))[0..256*4];
+		scope(exit) free(_data.ptr);
+		
+		size_t i = 0;
+		foreach(y; iota(0, 16).retro) foreach(x; 0..16)
+		{
+			foreach(comp; 0..3)
+			{
+				_data[comp + 4*i] = cast(ubyte) (4 * palBm[x,y][comp]); 
+			}
+			_data[3 + 4*i] = 255;
+			++i;
+		}
+		
+		data = new Bytes(_data);
+		
+		// 16x16 version, to be resized because there doesn't seem to be a way to stretch Images
+		auto t16 = new Pixbuf(data, Colorspace.RGB, true, 8, 16, 16, 16*4);
+		
+		thumbnail = t16.scaleSimple(32, 32, InterpType.NEAREST);
+		
+		object.destroy(t16);
 	}
 }
 
