@@ -498,16 +498,7 @@ class FilePal : File
 		ubyte[] _data = (cast(ubyte*)malloc(256*4))[0..256*4];
 		scope(exit) free(_data.ptr);
 		
-		size_t i = 0;
-		foreach(y; iota(0, 16).retro) foreach(x; 0..16)
-		{
-			foreach(comp; 0..3)
-			{
-				_data[comp + 4*i] = cast(ubyte) (4 * palBm[x,y][comp]); 
-			}
-			_data[3 + 4*i] = 255;
-			++i;
-		}
+		palBm.copyRGBA(_data, false);
 		
 		data = new Bytes(_data);
 		
@@ -540,15 +531,7 @@ class FileBm : File
 		ubyte[] _data = (cast(ubyte*)malloc(size))[0..size];
 		scope(exit) free(_data.ptr); // data is copied by Bytes ctor, so free this buffer afterwards
 		
-		size_t i = 0;
-		foreach(y; iota(0, fileBm.h).retro) foreach(x; 0..fileBm.w)
-		{
-			foreach(comp; 0..4)
-			{
-				_data[comp + 4*i] = cast(ubyte) (4 * fileBm[x,y][comp]); 
-			}
-			++i;
-		}
+		fileBm.copyRGBA(_data, false);
 		
 		data = new Bytes(_data);
 		tex = new Pixbuf(data, Colorspace.RGB, true, 8, cast(int)fileBm.w, cast(int)fileBm.h, cast(int)fileBm.w*4);

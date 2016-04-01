@@ -47,7 +47,7 @@ class ArcBm : Savable
 	size_t w, h;
 	union
 	{
-		Color[] colors; /// color data for a SingleBM (incl compressed)
+		Color[] colors; /// color data for a SingleBM, stored like in DF (Columns, bottom to top)
 		SubBm[] subBms; /// subBms in a MultipleBM
 	}
 	/// TODO
@@ -122,6 +122,35 @@ class ArcBm : Savable
 		return ret.data;
 	}
 	
+	/++
+	Copy the texture data to a pre-allocated buffer in RGBA format.
+	Params:
+		buffer = the ubyte[] memory into which to copy pixels.
+		originAtBottom = whether y=0 (the *start* of the buffer) is the bottom
+			of the texture (as in DF). Set to false if the origin of the buffer
+			is expected to be the top of the image (i.e. as in glib Pixbufs)
+	+/
+	void copyRGBA(ubyte[] buffer, bool originAtBottom = true)
+	in
+	{
+		assert(buffer.length == w*h*4, "Buffer does not match texture size");
+	}
+	body
+	{
+		foreach(y; 0..h)
+		{
+			size_t iy = (originAtBottom?y:(h-1-y));
+			foreach(x; 0..w)
+			{
+				size_t i = x + iy*w;
+				foreach(comp; 0..4)
+				{
+					buffer[comp + 4*i] = cast(ubyte) (4 * this[x,y][comp]);
+				}
+			}
+		}
+	}
+	
 	void[] ppm6()
 	{
 		import std.array : Appender;
@@ -189,10 +218,10 @@ class ArcBm : Savable
 		
 		bm.colors = new Color[bm.w*bm.h];
 		
-		foreach(x; 0..bm.w) foreach(y; 0..bm.h)
+		foreach(i; 0..bm.w*bm.h)
 		{
-			bm[x, y].index = p.read!(ubyte, EE);
-			bm[x, y].a = 63; // default full opacity
+			bm.colors[i].index = p.read!(ubyte, EE);
+			bm.colors[i].a = 63; // default full opacity
 		}
 		
 		if(palette !is null) bm.setColorsFromPaletteIndices(palette);
