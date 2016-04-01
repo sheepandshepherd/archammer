@@ -381,7 +381,12 @@ class Batch : Box
 		/// update the GTK-D widgets
 		void refresh()
 		{
-			if(file.thumbnail is null) thumbnail.setFromIconName("document-new", IconSize.DND);
+			if(file.thumbnail is null)
+			{
+				import std.file : exists;
+				bool fileExists = file.path !is null && exists(file.path);
+				thumbnail.setFromIconName(fileExists?"document-open":"document-new", IconSize.DND);
+			}
 			else
 			{
 				thumbnail.setFromPixbuf(file.thumbnail);
@@ -519,10 +524,53 @@ class FileBm : File
 {
 	override pure @property string type() { return "Texture"; }
 	
+	@property ArcBm fileBm() { return cast(ArcBm)file; }
+	
+	Bytes data;
+	Pixbuf tex;
+	
 	this(string path, ArcBm file)
 	{
+		import std.range;
+		import std.c.stdlib : malloc, free;
 		super(path);
 		this.file = file;
+		
+		size_t size = fileBm.w*fileBm.h*4;
+		ubyte[] _data = (cast(ubyte*)malloc(size))[0..size];
+		scope(exit) free(_data.ptr); // data is copied by Bytes ctor, so free this buffer afterwards
+		
+		size_t i = 0;
+		foreach(y; iota(0, fileBm.h).retro) foreach(x; 0..fileBm.w)
+		{
+			foreach(comp; 0..4)
+			{
+				_data[comp + 4*i] = cast(ubyte) (4 * fileBm[x,y][comp]); 
+			}
+			++i;
+		}
+		
+		data = new Bytes(_data);
+		tex = new Pixbuf(data, Colorspace.RGB, true, 8, cast(int)fileBm.w, cast(int)fileBm.h, cast(int)fileBm.w*4);
+		
+		if(fileBm.w == fileBm.h)
+		{
+			thumbnail = tex.scaleSimple(32, 32, InterpType.BILINEAR);
+		}
+		else
+		{
+			import std.algorithm.comparison;
+			size_t scaleFactor = max(fileBm.w, fileBm.h) / 32;
+			int sx = cast(int) (fileBm.w/scaleFactor),  sy = cast(int) (fileBm.h/scaleFactor);
+			sx = clamp(sx, 2, 32);
+			sy = clamp(sy, 2, 32);
+			Pixbuf temp = tex.scaleSimple(sx, sy, InterpType.BILINEAR);
+			int ox = (32-sx)/2, oy = (32-sy)/2;
+			thumbnail = new Pixbuf(Colorspace.RGB, true, 8, 32, 32);
+			thumbnail.fill(0); // transparency
+			temp.copyArea(0, 0, sx, sy, thumbnail, ox, oy);
+			object.destroy(temp);
+		}
 	}
 	
 	/// TODO: freeimage handles
