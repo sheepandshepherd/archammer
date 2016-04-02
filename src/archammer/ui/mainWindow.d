@@ -19,6 +19,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 module archammer.ui.mainWindow;
 
+debug import std.stdio : writeln;
+
 import gtk.Dialog, gtk.FileChooserDialog, gtk.FileChooserIF;
 import gtk.Main;
 import gtk.MainWindow;
@@ -39,12 +41,15 @@ import gtk.StyleContext;
 import gdk.Display;
 import gdk.Screen;
 
+import archammer.ui.util;
 import archammer.ui.batch;
+import archammer.ui.tabbm;
 
 class ArcWindow : MainWindow
 {
 	Statusbar status;
 	Batch batch;
+	TabBm tabBm;
 	this()
 	{
 		super("Arc Hammer");
@@ -72,6 +77,18 @@ class ArcWindow : MainWindow
 		
 		batch = new Batch(this);
 		tabs.appendPage(batch, "Batch");
+		
+		tabBm = new TabBm(this);
+		tabs.appendPage(tabBm, "BM");
+		
+		tabs.addOnSwitchPage(delegate void(Widget w, uint p, Notebook n)
+		{
+			ArcFileList fl = cast(ArcFileList)w;
+			if(fl)
+			{
+				fl.updateList();
+			}
+		});
 		
 		box.packStart(tabs, true, true, 0);
 		status = new Statusbar;
