@@ -143,10 +143,10 @@ static:
 }
 
 
-/// Tabs with this interface will have updateList called when they're switched to
-interface ArcFileList
+/// Tabs with this interface will have updateTab called when they're switched to
+interface ArcTab
 {
-	void updateList();
+	void updateTab();
 }
 
 

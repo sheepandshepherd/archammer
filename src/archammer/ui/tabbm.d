@@ -64,7 +64,7 @@ import glib.ListG, glib.ListSG;
 Tab for viewing and editing BMs.
 
 +/
-class TabBm : Box, ArcFileList
+class TabBm : Box, ArcTab
 {
 	ArcWindow window;
 	Batch batch;
@@ -194,9 +194,10 @@ class TabBm : Box, ArcFileList
 	}
 	
 	/++
-	Get the list of BM files from Batch and create their mini-entries
+	Called when switching to this tab.
+	Get the list of BM files from Batch and create their mini-entries.
 	+/
-	void updateList()
+	void updateTab()
 	{
 		import std.range;
 		

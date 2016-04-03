@@ -83,10 +83,10 @@ class ArcWindow : MainWindow
 		
 		tabs.addOnSwitchPage(delegate void(Widget w, uint p, Notebook n)
 		{
-			ArcFileList fl = cast(ArcFileList)w;
-			if(fl)
+			ArcTab tab = cast(ArcTab)w;
+			if(tab)
 			{
-				fl.updateList();
+				tab.updateTab();
 			}
 		});
 		
