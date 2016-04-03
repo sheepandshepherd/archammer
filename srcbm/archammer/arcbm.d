@@ -129,8 +129,10 @@ class ArcBm : Savable
 		originAtBottom = whether y=0 (the *start* of the buffer) is the bottom
 			of the texture (as in DF). Set to false if the origin of the buffer
 			is expected to be the top of the image (i.e. as in glib Pixbufs)
+		palette = optional palette to convert to instead of using the internal
+			color array
 	+/
-	void copyRGBA(ubyte[] buffer, bool originAtBottom = true)
+	void copyRGBA(ubyte[] buffer, bool originAtBottom = true, ArcPal palette = null)
 	in
 	{
 		assert(buffer.length == w*h*4, "Buffer does not match texture size");
@@ -143,9 +145,17 @@ class ArcBm : Savable
 			foreach(x; 0..w)
 			{
 				size_t i = x + iy*w;
+				Color color = this[x,y];
+				if(palette !is null)
+				{
+					color = palette[ palette.mostSimilarIndex(color) ];
+				}
+				
+				// TODO: transparency
+				
 				foreach(comp; 0..4)
 				{
-					buffer[comp + 4*i] = cast(ubyte) (4 * this[x,y][comp]);
+					buffer[comp + 4*i] = cast(ubyte) (4 * color[comp]);
 				}
 			}
 		}
