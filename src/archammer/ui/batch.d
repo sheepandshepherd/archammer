@@ -24,6 +24,7 @@ import std.string : toStringz, fromStringz;
 import std.traits : EnumMembers;
 
 debug import std.stdio;
+import std.experimental.allocator.mallocator;
 
 import archammer.ui.util;
 import archammer.util;
@@ -324,7 +325,7 @@ class Batch : Box
 			
 			thumbnail = new Image();
 			
-			string nameText = file.path?file.baseName:"new";
+			string nameText = file.name;
 			name = new Entry(nameText,8);
 			auto viewButton = new Button("View");
 			viewButton.setSensitive(false);
@@ -420,6 +421,14 @@ abstract class File
 		import std.path;
 		if(path is null) return null;
 		return stripExtension(baseName(path));
+	}
+	
+	/++
+	The text to display in lists containing this file
+	+/
+	@property string name()
+	{
+		return path?baseName:"new";
 	}
 	
 	@disable this(); /// no default constructor because we need to set immutable `path`
@@ -520,22 +529,30 @@ class FileBm : File
 	Bytes data;
 	Pixbuf tex;
 	
-	this(string path, ArcBm file)
+	void refreshTex()
 	{
-		import std.range;
-		import std.c.stdlib : malloc, free;
-		super(path);
-		this.file = file;
+		if(tex) object.destroy(tex);
+		if(data) object.destroy(data);
 		
 		size_t size = fileBm.w*fileBm.h*4;
-		ubyte[] _data = (cast(ubyte*)malloc(size))[0..size];
-		scope(exit) free(_data.ptr); // data is copied by Bytes ctor, so free this buffer afterwards
+		ubyte[] _data = cast(ubyte[]) Mallocator.instance.allocate(size);
+		scope(exit) Mallocator.instance.deallocate(_data); // data is copied by Bytes ctor, so free this buffer afterwards
 		
 		fileBm.copyRGBA(_data, false);
 		
 		data = new Bytes(_data);
 		tex = new Pixbuf(data, Colorspace.RGB, true, 8, cast(int)fileBm.w, cast(int)fileBm.h, cast(int)fileBm.w*4);
+	}
+	
+	this(string path, ArcBm file)
+	{
+		import std.range;
+		super(path);
+		this.file = file;
 		
+		refreshTex();
+		
+		// make 32x32 thumbnail
 		if(fileBm.w == fileBm.h)
 		{
 			thumbnail = tex.scaleSimple(32, 32, InterpType.BILINEAR);
@@ -555,8 +572,6 @@ class FileBm : File
 			object.destroy(temp);
 		}
 	}
-	
-	/// TODO: freeimage handles
 }
 
 
