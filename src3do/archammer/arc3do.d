@@ -287,7 +287,7 @@ class Arc3do : Savable
 		import std.algorithm.searching : countUntil;
 		import std.algorithm.iteration;
 		import std.array : join, Appender, appender; // for more efficient appending
-		import std.range : iota, only, array;
+		import std.range : iota, only, array, retro;
 		import std.format : singleSpec, formatValue, format;
 		import std.uni : toUpper; // uppercasing Shading enum
 		import std.traits : EnumMembers; // iteration over Shading enum
@@ -329,10 +329,10 @@ class Arc3do : Savable
 					.join("\n").array); // string
 				polyText.put("\nusemtl None\ns off\n");
 
-				foreach(size_t qi, Quad q; quads)
+				foreach(qi; 0..quads.length)
 				{
 					polyText.put("f");
-					foreach(vi; 0..4)
+					foreach(vi; iota(0,4,1).retro)
 					{
 						polyText.put(" ");
 						polyText.put(only(qi*4+vi+vNum,qi*4+vi+uNum,qi*4+vi+nNum).map!(a => a.text).join("/").array);
@@ -364,11 +364,11 @@ class Arc3do : Savable
 					.map!(v => "vn "~(v[].map!(vi => text(vi)).join(" "))) // string[]
 					.join("\n").array); // string
 				polyText.put("\ns off\n");
-				
-				foreach(size_t ti, Tri t; tris)
+
+				foreach(ti; 0..tris.length)
 				{
 					polyText.put("f");
-					foreach(vi; 0..3)
+					foreach(vi; iota(0,3,1).retro)
 					{
 						polyText.put(" "); ///only(ti*4+vi+vNum,ti*4+vi+uNum,ti+nNum)
 						polyText.put(only(ti*3+vi+vNum,ti*3+vi+uNum,ti+nNum).map!(a => a.text).join("/").array);
