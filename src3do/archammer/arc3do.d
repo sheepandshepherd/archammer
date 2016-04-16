@@ -712,9 +712,17 @@ class Arc3do : Savable
 		return ret.data;
 	} // end saveMesh()
 
+	static Arc3do loadMesh(string filePath)
+	{
+		import std.file, std.path;
+		if(!exists(filePath)) throw new Exception(filePath~" does not exist.");
+		ubyte[] data = cast(ubyte[])read(filePath);
+		return loadMeshData(data, filePath.baseName);
+	}
+
 	/// load a mesh with ASSIMP.
 	/// Returns: the loaded Arc3do.
-	static Arc3do loadMesh(string filePath)
+	static Arc3do loadMeshData(in ubyte[] data, in string fileBaseName)
 	{
 		import std.file;
 		import std.path;
@@ -722,14 +730,13 @@ class Arc3do : Savable
 		import std.string : toStringz, fromStringz;
 		import std.conv : text;
 		import derelict.assimp3.assimp;
-		if(!exists(filePath)) throw new Exception(filePath~" does not exist.");
 
-		string name = baseName(filePath);
-		name = name.findSplitBefore(".")[0];
+		string extHint = extension(fileBaseName);
+		string name = fileBaseName.findSplitBefore(".")[0];
 
-		const(aiScene*) mesh = aiImportFile( filePath.toStringz, aiProcess_CalcTangentSpace | 
-			aiProcess_Triangulate | aiProcess_JoinIdenticalVertices  | aiProcess_SortByPType |
-			aiProcess_FlipWindingOrder );
+		const(aiScene*) mesh = aiImportFileFromMemory( /++cast(const(void)*)+/data.ptr, cast(uint)data.length, 
+			aiProcess_CalcTangentSpace | aiProcess_Triangulate | aiProcess_JoinIdenticalVertices | 
+			aiProcess_SortByPType | aiProcess_FlipWindingOrder ,  extHint.toStringz );
 
 		if(!mesh)
 		{
