@@ -221,6 +221,10 @@ class Batch : Box
 	}
 	
 	/// Open a file from a path, determine its type, and add it to a FileEntry in the Batch UI if successful.
+	/// Params:
+	/// 	filePath = the path used to naively determine type and default save location.
+	/// 		For GOB-extracted files, this includes the GOB path ~ the filename.
+	/// 	fileData = the actual data to load, either from the file or from GOB
 	void openFile(string filePath, ubyte[] fileData)
 	{
 		import std.path, std.file;
@@ -303,6 +307,12 @@ class Batch : Box
 	
 	class FileEntry : Frame
 	{
+		/// Small version of the FileEntry in the tab for this file type
+		interface SubEntry
+		{
+			
+		}
+		SubEntry subEntry;
 		File file;
 		uint outputFormat = 0;
 		
@@ -370,6 +380,17 @@ class Batch : Box
 			outBox.packStart(convertButton, false, false, 2);
 			
 			refresh();
+			
+			/// create subentry
+			if(cast(FileBm)file)
+			{
+				subEntry = window.tabBm.addEntry(this);
+			}
+		}
+		
+		~this()
+		{
+			if(subEntry !is null) object.destroy(subEntry);
 		}
 		
 		/// save this entry's file using the settings specified in the UI

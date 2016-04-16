@@ -158,7 +158,7 @@ class TabBm : Box, ArcTab
 	}
 	
 	/// List item for BM files. Actual data and FileBM gotten from FileEntry in Batch tab.
-	class MiniEntry : Box
+	class MiniEntry : Box, Batch.FileEntry.SubEntry
 	{
 		Batch.FileEntry fe;
 		Image thumbnail;
@@ -179,6 +179,18 @@ class TabBm : Box, ArcTab
 				updateViewer();
 			});
 		}
+		~this()
+		{
+			hide();
+			destroy();
+		}
+	}
+
+	MiniEntry addEntry(Batch.FileEntry fe)
+	{
+		auto me = new MiniEntry(fe);
+		list.add(me);
+		return me;
 	}
 	
 	MiniEntry[] getMiniEntries()
@@ -205,12 +217,12 @@ class TabBm : Box, ArcTab
 		FilePal currentPal = pal;
 		
 		// clear the BM list
-		foreach(entry; getMiniEntries().retro)
+		/++foreach(entry; getMiniEntries().retro)
 		{
 			entry.hide();
 			entry.destroy();
 			object.destroy(entry);
-		}
+		}+/
 		// clear the palette combobox
 		paletteBox.removeAll();
 		paletteBox.appendText("<default>");
@@ -221,13 +233,13 @@ class TabBm : Box, ArcTab
 			auto entryBm = cast(FileBm)entry.file;
 			auto entryPal = cast(FilePal)entry.file;
 			
-			if(entryBm)
+			/++if(entryBm)
 			{
 				debug writeln("Adding BM ",entry.file.path);
 				list.add(new MiniEntry(entry));
 				if(entryBm is bm) newBm = entryBm;
 			}
-			else if(entryPal)
+			else+/ if(entryPal)
 			{
 				paletteBox.appendText(entry.file.name);
 				if(entryPal is currentPal)
