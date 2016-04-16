@@ -207,10 +207,11 @@ class Batch : Box
 			
 			foreach(f; paths)
 			{
-				import std.file : exists;
+				import std.file;
 				if(f.exists)
 				{
-					openFile(f);
+					ubyte[] data = cast(ubyte[])read(f);
+					openFile(f, data);
 				}
 			}
 			
@@ -220,7 +221,7 @@ class Batch : Box
 	}
 	
 	/// Open a file from a path, determine its type, and add it to a FileEntry in the Batch UI if successful.
-	void openFile(string filePath)
+	void openFile(string filePath, ubyte[] fileData)
 	{
 		import std.path, std.file;
 		import std.uni : icmp;
@@ -229,25 +230,25 @@ class Batch : Box
 			auto ext = extension(filePath);
 			if(  FileFilters.arc3do.matchFile(filePath)  )
 			{
-				auto arc3do = Arc3do.load3do(filePath);
+				auto arc3do = Arc3do.load3doText(cast(string)fileData);
 				auto fe = addFile(new File3do(filePath, arc3do));
 				fe.outputType.setActive(2); // default to OBJ export
 			}
 			else if( FileFilters.assimp.matchFile(filePath) )
 			{
-				auto arc3do = Arc3do.loadMesh(filePath);
+				auto arc3do = Arc3do.loadMeshData(fileData, ext);
 				auto fe = addFile(new File3do(filePath, arc3do));
 				fe.outputType.setActive(1); // default to 3DO export
 			}
 			else if( FileFilters.arcPal.matchFile(filePath) )
 			{
-				auto arcPal = ArcPal.load(filePath);
+				auto arcPal = ArcPal.loadData(fileData);
 				auto fe = addFile(new FilePal(filePath, arcPal));
 				fe.outputType.setActive(2);
 			}
 			else if( FileFilters.arcBm.matchFile(filePath) )
 			{
-				auto arcBm = ArcBm.load(filePath);
+				auto arcBm = ArcBm.loadData(fileData);
 				auto fe = addFile(new FileBm(filePath, arcBm));
 				fe.outputType.setActive(2);
 			}
