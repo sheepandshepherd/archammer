@@ -300,7 +300,7 @@ class TabBm : Box, ArcTab
 		int scale = cast(int) zoom.getValue();
 		if(scale > 1)
 		{
-			tex = tex.scaleSimple(scale * tex.getWidth(), scale * tex.getHeight(), InterpType.HYPER);
+			tex = tex.scaleSimple(scale * tex.getWidth(), scale * tex.getHeight(), InterpType.NEAREST);
 		}
 		image.setFromPixbuf(tex);
 	}
