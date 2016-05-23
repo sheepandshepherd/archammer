@@ -146,8 +146,13 @@ class TabBm : Box, ArcTab
 		listFrame.setShadowType(ShadowType.NONE);
 		
 		viewer = new Box(Orientation.VERTICAL, 0);
+		auto imageScroll = new ScrolledWindow(PolicyType.AUTOMATIC, PolicyType.AUTOMATIC);
+		imageScroll.setHexpand(true);
+		imageScroll.setVexpand(true);
+		imageScroll.setOverlayScrolling(false);
 		image = new Image();
-		viewer.add(image);
+		imageScroll.add(image);
+		viewer.add(imageScroll);
 		
 		auto pane = new Paned(Orientation.HORIZONTAL);
 		pane.add1(listFrame);
