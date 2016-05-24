@@ -88,7 +88,7 @@ static:
 	ArcFilter gimpPal; /// Gimp palette
 	ArcFilter arcBm; /// DF BM
 	ArcFilter texture; /// FreeImage texture
-	
+	ArcFilter arcGob; /// GOB archive (should LFD and Outlaws archives be in this group?)
 	
 	void init()
 	{
@@ -139,6 +139,10 @@ static:
 		texture = new ArcFilter();
 		texture.setName("Texture (FreeImage) - *.GIF; etc");
 		texture.add("*.[gG][iI][fF]"); /// TODO: get from FreeImage instead of hard-coding
+
+		arcGob = new ArcFilter();
+		arcGob.setName("Archive (DF GOB) - *.GOB");
+		arcGob.add("*.[gG][oO][bB]");
 	}
 }
 

@@ -10,6 +10,7 @@
 	"dependencies": {
 		"derelict-assimp3": "~>1.0.1",
 		"archammer:arcutil": "*",
+		"archammer:arcgob": "*",
 		"archammer:arc3do": "*",
 		"archammer:arcpal": "*",
 		"archammer:arcbm": "*",
@@ -28,6 +29,20 @@
 			"targetType":"library",
 			"dependencies": {
 				
+			},
+		},
+		{
+			"name": "arcgob",
+			"description": "ArcHammer GOB library",
+			"authors": ["sheepandshepherd"],
+			"copyright": "Copyright © 2016 sheepandshepherd",
+			"license": "MIT",
+			"sourcePaths":["srcgob"],
+			"importPaths":["srcgob"],
+			"targetPath": "bin",
+			"targetType":"library",
+			"dependencies": {
+				"archammer:arcutil": "*",
 			},
 		},
 		{

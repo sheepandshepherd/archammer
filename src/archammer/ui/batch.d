@@ -31,6 +31,7 @@ import archammer.util;
 import archammer.arc3do;
 import archammer.arcpal;
 import archammer.arcbm;
+import archammer.arcgob;
 
 import derelict.assimp3.assimp;
 
@@ -64,6 +65,7 @@ import gio.FileIF;
 import gtk.FileFilter;
 import gobject.Value;
 import gtk.ListStore;
+import gtk.TreeModelSort;
 import gtk.TreeIter;
 import gtkc.gobjecttypes;
 import gtk.TreeView;
@@ -256,6 +258,11 @@ class Batch : Box
 				auto fe = addFile(new FileBm(filePath, arcBm));
 				fe.outputType.setActive(2);
 			}
+			else if( FileFilters.arcGob.matchFile(filePath) )
+			{
+				auto arcGob = ArcGob.loadData(fileData);
+				auto fe = addFile(new FileGob(filePath, arcGob));
+			}
 		}
 		catch(Exception e)
 		{
@@ -386,6 +393,10 @@ class Batch : Box
 			{
 				subEntry = window.tabBm.addEntry(this);
 			}
+			if(cast(FileGob)file)
+			{
+				subEntry = window.tabGob.addEntry(this);
+			}
 		}
 		
 		~this()
@@ -490,7 +501,51 @@ abstract class File
 		if(exists(savePath)) remove(savePath);
 		write(savePath, saveFormat.dataFunction());
 	}
+}
+
+class FileGob : File
+{
+	override pure @property string type() { return "GOB Archive"; }
 	
+	@property ArcGob fileGob() { return cast(ArcGob)file; }
+
+	ListStore fileListStore;
+	/// $(D fileListStore) column numbers
+	static enum TreeColumn : int
+	{
+		name,
+		pointer,
+		size,
+
+	}
+	private static GType[] TreeTypes = [GType.STRING, GType.POINTER, GType.INT,];
+
+	/// regenerate the $(D fileListStore) from the GOB's internal file list
+	void refreshFileListStore()
+	{
+		// clear old list
+		fileListStore.clear();
+		foreach(f; fileGob.files)
+		{
+			auto iter = fileListStore.createIter();
+			fileListStore.setValue(iter, TreeColumn.name, f.name);
+			Value ptr = new Value();
+			ptr.init(GType.POINTER);
+			ptr.setPointer(cast(void*)(f));
+			fileListStore.setValue(iter, TreeColumn.pointer, ptr);
+			fileListStore.setValue(iter, TreeColumn.size, cast(int)f.data.length);
+		}
+	}
+	
+	this(string path, ArcGob file)
+	{
+		super(path);
+		this.file = file;
+
+
+		fileListStore = new ListStore(TreeTypes);
+		refreshFileListStore();
+	}
 }
 
 class File3do : File

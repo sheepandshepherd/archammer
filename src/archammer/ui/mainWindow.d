@@ -43,13 +43,14 @@ import gdk.Screen;
 
 import archammer.ui.util;
 import archammer.ui.batch;
-import archammer.ui.tabbm;
+import archammer.ui.tabbm, archammer.ui.tabgob;
 
 class ArcWindow : MainWindow
 {
 	Statusbar status;
 	Batch batch;
 	TabBm tabBm;
+	TabGob tabGob;
 	this()
 	{
 		super("Arc Hammer");
@@ -77,6 +78,9 @@ class ArcWindow : MainWindow
 		
 		batch = new Batch(this);
 		tabs.appendPage(batch, "Batch");
+
+		tabGob = new TabGob(this);
+		tabs.appendPage(tabGob, "GOB");
 		
 		tabBm = new TabBm(this);
 		tabs.appendPage(tabBm, "BM");

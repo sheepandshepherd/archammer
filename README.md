@@ -8,10 +8,12 @@ Additionally, the libraries for each file format can be used as dependencies in 
 
 Supported file formats
 ----------------------
-DF format | Import formats | Export formats  
-----------|----------------|----------------  
-3DO Mesh  | [See ASSIMP list](http://assimp.sourceforge.net/main_features_formats.html) | Wavefront OBJ  
-
+DF format   | Import formats | Export formats  
+------------|----------------|----------------  
+3DO Mesh    | [See ASSIMP list](http://assimp.sourceforge.net/main_features_formats.html) | Wavefront OBJ  
+PAL Palette | -              | Gimp GPL  
+BM Texture  | -              | PPM P6  
+GOB Archive | -              | -  
 
 Compiling
 ---------
