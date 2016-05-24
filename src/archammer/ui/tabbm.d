@@ -186,6 +186,13 @@ class TabBm : Box, ArcTab
 		}
 		~this()
 		{
+			if(bm is cast(FileBm)fe.file)
+			{
+				debug writeln("Unselecting self from TabBm");
+				bm = null;
+				updateViewer();
+			}
+
 			hide();
 			destroy();
 		}
@@ -218,7 +225,6 @@ class TabBm : Box, ArcTab
 	{
 		import std.range;
 		
-		FileBm newBm = null;
 		FilePal currentPal = pal;
 		
 		// clear the BM list
@@ -235,16 +241,9 @@ class TabBm : Box, ArcTab
 		
 		foreach(entry; batch.getEntries())
 		{
-			auto entryBm = cast(FileBm)entry.file;
 			auto entryPal = cast(FilePal)entry.file;
 			
-			/++if(entryBm)
-			{
-				debug writeln("Adding BM ",entry.file.path);
-				list.add(new MiniEntry(entry));
-				if(entryBm is bm) newBm = entryBm;
-			}
-			else+/ if(entryPal)
+			if(entryPal)
 			{
 				paletteBox.appendText(entry.file.name);
 				if(entryPal is currentPal)
@@ -253,8 +252,6 @@ class TabBm : Box, ArcTab
 				}
 			}
 		}
-		
-		bm = newBm;
 		
 		list.showAll();
 		
@@ -279,7 +276,11 @@ class TabBm : Box, ArcTab
 			texData = null;
 		}
 		
-		if(bm is null) return; // empty selection, do nothing
+		if(bm is null)
+		{
+			image.clear();
+			return; // empty selection, do nothing
+		}
 		
 		ArcBm fileBm = bm.fileBm;
 		
