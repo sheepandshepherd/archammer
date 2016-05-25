@@ -136,6 +136,7 @@ class TabGob : Box, ArcTab
 				fileChooser.setModal(true);
 				fileChooser.setLocalOnly(true);
 				fileChooser.setCurrentName(f.name);
+				fileChooser.setDoOverwriteConfirmation(true);
 				
 				auto response = fileChooser.run();
 				if(response == ResponseType.OK)
