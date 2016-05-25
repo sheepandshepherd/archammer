@@ -34,6 +34,12 @@ class ArcGob : Savable
 	@property const(SaveFormat[]) saveFormats() { return [ SaveFormat("GOB","GOB (Dark Forces)",&data) ];}
 	
 	DynamicArray!File files;
+
+	void addFile(in char[] name, in ubyte[] data)
+	{
+		auto f = new File(name, data);
+		files.insert(f);
+	}
 	
 	/++
 	Data for a file in a GOB.
@@ -45,6 +51,22 @@ class ArcGob : Savable
 		
 		
 		this() @disable;
+
+		@nogc private this(in char[] name, in ubyte[] data)
+		in
+		{
+			assert(name.length < 13);
+		}
+		body
+		{
+			char[] nameSlice = cast(char[]) Mallocator.instance.allocate(name.length);
+			nameSlice[] = name[];
+			this.name = cast(immutable char[])nameSlice;
+
+			this.data = cast(ubyte[])Mallocator.instance.allocate(data.length);
+			this.data[] = data[];
+		}
+
 		@nogc private this(in ubyte[] entry, in ubyte[] data)
 		in { assert(entry.length == 4+4+13); }
 		body

@@ -151,7 +151,68 @@ class TabGob : Box, ArcTab
 				}
 			});
 		addFile = new Button("Add...",delegate void(Button b){
+				import std.path, std.file;
+				import std.string : toUpper;
+				import gtk.FileChooserDialog, gtk.FileChooserIF;
+				import std.typecons : scoped;
 
+				if(gob is null) return;
+
+				auto fileChooser = new FileChooserDialog("Add File", window, FileChooserAction.OPEN);
+				scope(exit) fileChooser.destroy();
+				fileChooser.setSelectMultiple(true);
+				/// add all the filters of loadable files:
+				foreach(ref ff; [AllFileFilters])
+				{
+					fileChooser.addFilter(ff);
+				}
+				
+				fileChooser.setModal(true);
+				fileChooser.setLocalOnly(true);
+				
+				auto response = fileChooser.run();
+				if(response == ResponseType.OK)
+				{
+					import std.algorithm.iteration;
+					import std.range : array;
+					import glib.ListSG;
+					import gio.File, gio.FileIF;
+					/// load each
+					auto list = fileChooser.getFiles();
+					scope(exit) list.free(); /// ObjectGs get `unref`ed by the D destructor.
+					File[] files = list.toArray!File();
+					
+					string[] paths = files.map!(f=>f.getPath()).array;
+					
+					fileChooser.hide();
+					
+					foreach(f; paths)
+					{
+						import std.file;
+						if(f.exists)
+						{
+							import std.algorithm.comparison;
+
+							auto fb = f.baseName;
+							ubyte[] data = cast(ubyte[])read(f);
+							/// deal with filenames longer than 12 chars
+							if(fb.length > 12) // max filename length (8+1+3) for DOS
+							{
+								char[12] tempPath = '\0';
+								tempPath[0..6] = fb[0..6];
+								tempPath[6..9] = "~1.";
+								auto ext = fb.extension;
+								tempPath[9..9+min(ext.length-1, 3)] = ext[1..1+min(ext.length-1, 3)];
+
+								gob.fileGob.addFile(tempPath[], data);
+							}
+							else gob.fileGob.addFile(fb, data);
+						}
+					}
+					
+					gob.refreshFileListStore();
+					files.each!(f=>(object.destroy(f)));
+				}
 			});
 		deleteFile = new Button("Delete",delegate void(Button b){
 				import std.algorithm.searching;
@@ -169,9 +230,6 @@ class TabGob : Box, ArcTab
 
 				gob.refreshFileListStore();
 			});
-
-		// not ready yet
-		addFile.setSensitive(false);
 
 		tools.packStart(new Label(""),true,true,0); // temp blank to scoot the rest to the right side
 		foreach(b; [openFile, extractFile, addFile, deleteFile]) tools.packStart(b,false,false,2);
