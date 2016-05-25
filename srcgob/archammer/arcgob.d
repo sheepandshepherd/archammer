@@ -76,10 +76,52 @@ class ArcGob : Savable
 	}
 	
 	
-	
+	/++@nogc+/ /+nothrow+/
 	void[] data()
 	{
-		return null;
+		import std.bitmanip, std.range;
+		enum EE = Endian.littleEndian;
+		enum char[4] header = "GOB\x0a";
+		size_t size = 4 + 4 + 4; // header + manifest offset + file count (in manifest)
+		uint manifestOffset = 4 + 4; /// location of manifest
+		uint pos = 4 + 4; /// current location; needed for storing file offsets
+		uint[] fileOffsets = cast(uint[])Mallocator.instance.allocate(uint.sizeof*files.length);
+		scope(exit) Mallocator.instance.deallocate(fileOffsets);
+		assert(fileOffsets.length == files.length);
+
+		foreach(fi, f; files)
+		{
+			size += 4 + 4 + 13; // ptr + length + name: manifest entry
+			size += f.data.length; // payload
+			manifestOffset += cast(uint)f.data.length; // payload only (the entry is IN the manifest)
+			fileOffsets[fi] = pos;
+			pos += cast(uint)f.data.length;
+		}
+
+		ubyte[] raw = cast(ubyte[])Mallocator.instance.allocate(size);
+		scope(exit) Mallocator.instance.deallocate(raw);
+		raw[0..4] = cast(ubyte[])header[];
+		raw.write!(uint, EE)(manifestOffset, 4);
+		size_t writePos = 4 + 4; // files start right after the header and offset
+		foreach(f; files)
+		{
+			raw[writePos..writePos+f.data.length] = f.data[];
+			writePos += f.data.length;
+		}
+		assert(writePos == manifestOffset);
+		raw.write!(uint, EE)(cast(uint)files.length, &writePos);
+		foreach(fi, f; files)
+		{
+			raw.write!(uint, EE)(fileOffsets[fi], &writePos);
+			raw.write!(uint, EE)(cast(uint)f.data.length, &writePos);
+			char[13] name = '\0';
+			assert(f.name.length < 13); // f.name shouldn't include the null terminator (8+1+3 max)
+			name[0..f.name.length] = f.name[];
+			raw[writePos..writePos+13] = cast(ubyte[])name[];
+			writePos += 13;
+		}
+		assert(writePos == raw.length);
+		return raw.dup; /// FIXME: change the Savable API to allow for mallocated memory and @nogc
 	}
 	
 	
