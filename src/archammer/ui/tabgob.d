@@ -154,12 +154,24 @@ class TabGob : Box, ArcTab
 
 			});
 		deleteFile = new Button("Delete",delegate void(Button b){
+				import std.algorithm.searching;
 
+				if(gob is null) return;
+				auto iter = fileView.getSelectedIter();
+				if(iter is null) return;
+
+				auto ptr = scoped!Value();
+				iter.getValue(FileGob.TreeColumn.pointer,ptr);
+				ArcGob.File f = cast(ArcGob.File)ptr.getPointer();
+				// inefficient search; could instead store file index in the ListStore, but is it worth it?
+				auto fi = gob.fileGob.files[].countUntil(f);
+				gob.fileGob.files.remove(fi);
+
+				gob.refreshFileListStore();
 			});
 
 		// not ready yet
 		addFile.setSensitive(false);
-		deleteFile.setSensitive(false);
 
 		tools.packStart(new Label(""),true,true,0); // temp blank to scoot the rest to the right side
 		foreach(b; [openFile, extractFile, addFile, deleteFile]) tools.packStart(b,false,false,2);
