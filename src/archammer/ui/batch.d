@@ -525,7 +525,7 @@ class FileGob : File
 	{
 		// clear old list
 		fileListStore.clear();
-		foreach(f; fileGob.files)
+		foreach(f; fileGob.files[])
 		{
 			auto iter = fileListStore.createIter();
 			fileListStore.setValue(iter, TreeColumn.name, f.name);

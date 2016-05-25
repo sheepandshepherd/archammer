@@ -27,11 +27,13 @@ import archammer.util;
 
 import std.experimental.allocator.mallocator;
 
+import containers.dynamicarray;
+
 class ArcGob : Savable
 {
 	@property const(SaveFormat[]) saveFormats() { return [ SaveFormat("GOB","GOB (Dark Forces)",&data) ];}
 	
-	File[] files;
+	DynamicArray!File files;
 	
 	/++
 	Data for a file in a GOB.
@@ -89,7 +91,7 @@ class ArcGob : Savable
 		scope(exit) Mallocator.instance.deallocate(fileOffsets);
 		assert(fileOffsets.length == files.length);
 
-		foreach(fi, f; files)
+		foreach(fi, f; files[])
 		{
 			size += 4 + 4 + 13; // ptr + length + name: manifest entry
 			size += f.data.length; // payload
@@ -103,14 +105,14 @@ class ArcGob : Savable
 		raw[0..4] = cast(ubyte[])header[];
 		raw.write!(uint, EE)(manifestOffset, 4);
 		size_t writePos = 4 + 4; // files start right after the header and offset
-		foreach(f; files)
+		foreach(f; files[])
 		{
 			raw[writePos..writePos+f.data.length] = f.data[];
 			writePos += f.data.length;
 		}
 		assert(writePos == manifestOffset);
 		raw.write!(uint, EE)(cast(uint)files.length, &writePos);
-		foreach(fi, f; files)
+		foreach(fi, f; files[])
 		{
 			raw.write!(uint, EE)(fileOffsets[fi], &writePos);
 			raw.write!(uint, EE)(cast(uint)f.data.length, &writePos);
@@ -143,7 +145,6 @@ class ArcGob : Savable
 		if(data[0..4] != cast(ubyte[])header) throw new Exception("Incorrect header ("~cast(string)data[0..4]);
 		size_t manifestPtr = cast(size_t) data[4..8].peek!(uint, EE);
 		ArcGob ret = new ArcGob();
-		ret.files = [];
 		
 		const(ubyte)[] manifest = data[manifestPtr..$];
 		if((manifest.length - 4) % (4+4+13) != 0) throw new Exception("File manifest has invalid length");
@@ -151,7 +152,7 @@ class ArcGob : Savable
 		if(manifest.length != numFiles*(4+4+13)) throw new Exception("File manifest length doesn't match number of files");
 		foreach(fi; 0..numFiles)
 		{
-			ret.files ~= new File(manifest[0..4+4+13], data);
+			ret.files.insert(new File(manifest[0..4+4+13], data));
 			manifest = manifest.drop(4+4+13);
 		}
 		assert(manifest.length == 0);
