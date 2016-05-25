@@ -14,7 +14,7 @@
 		"archammer:arc3do": "*",
 		"archammer:arcpal": "*",
 		"archammer:arcbm": "*",
-		"gtk-d": "~>3.2.2"
+		"gtk-d": "~>3.3.1"
 	},
 	"subPackages": [
 		{
@@ -28,7 +28,7 @@
 			"targetPath": "bin",
 			"targetType":"library",
 			"dependencies": {
-				
+				"emsi_containers": "~>0.4.3",
 			},
 		},
 		{
@@ -58,7 +58,7 @@
 			"dependencies": {
 				"archammer:arcutil": "*",
 				"derelict-assimp3": "~>1.0.1",
-				"pegged": "~>0.2.1",
+				"pegged": "~>0.3.2",
 			},
 		},
 		{
