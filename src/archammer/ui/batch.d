@@ -227,47 +227,52 @@ class Batch : Box
 	/// 	filePath = the path used to naively determine type and default save location.
 	/// 		For GOB-extracted files, this includes the GOB path ~ the filename.
 	/// 	fileData = the actual data to load, either from the file or from GOB
-	void openFile(string filePath, ubyte[] fileData)
+	/// 
+	/// Returns: the newly created FileEntry, or null if the file wasn't loadable
+	FileEntry openFile(string filePath, ubyte[] fileData)
 	{
 		import std.path, std.file;
 		import std.uni : icmp;
 		try
 		{
 			auto ext = extension(filePath);
+			FileEntry fe;
 			if(  FileFilters.arc3do.matchFile(filePath)  )
 			{
 				auto arc3do = Arc3do.load3doText(cast(string)fileData);
-				auto fe = addFile(new File3do(filePath, arc3do));
+				fe = addFile(new File3do(filePath, arc3do));
 				fe.outputType.setActive(2); // default to OBJ export
 			}
 			else if( FileFilters.assimp.matchFile(filePath) )
 			{
 				auto arc3do = Arc3do.loadMeshData(fileData, ext);
-				auto fe = addFile(new File3do(filePath, arc3do));
+				fe = addFile(new File3do(filePath, arc3do));
 				fe.outputType.setActive(1); // default to 3DO export
 			}
 			else if( FileFilters.arcPal.matchFile(filePath) )
 			{
 				auto arcPal = ArcPal.loadData(fileData);
-				auto fe = addFile(new FilePal(filePath, arcPal));
+				fe = addFile(new FilePal(filePath, arcPal));
 				fe.outputType.setActive(2);
 			}
 			else if( FileFilters.arcBm.matchFile(filePath) )
 			{
 				auto arcBm = ArcBm.loadData(fileData);
-				auto fe = addFile(new FileBm(filePath, arcBm));
+				fe = addFile(new FileBm(filePath, arcBm));
 				fe.outputType.setActive(2);
 			}
 			else if( FileFilters.arcGob.matchFile(filePath) )
 			{
 				auto arcGob = ArcGob.loadData(fileData);
-				auto fe = addFile(new FileGob(filePath, arcGob));
+				fe = addFile(new FileGob(filePath, arcGob));
 			}
+			return fe; // will be null if nothing opened
 		}
 		catch(Exception e)
 		{
 			showErrorDialog("Load exception", "Error loading file <"~filePath~">:", e.msg);
 		}
+		return null;
 	}
 	
 	/// Add an open file to the Batch UI

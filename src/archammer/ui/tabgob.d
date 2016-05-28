@@ -114,7 +114,7 @@ class TabGob : Box, ArcTab
 
 				window.batch.openFile(f.name, f.data);
 			});
-		openFile.setTooltipText("Open the file directly in ArcHammer");
+		openFile.setTooltipText("Open the file directly in ArcHammer\n\nDouble-clicking a file in the list will also open it.");
 		extractFile = new Button("Extract...",delegate void(Button b){
 				import std.path, std.file;
 				import std.string : toUpper;
@@ -354,12 +354,12 @@ class TabGob : Box, ArcTab
 	List of files in selected GOB.
 
 	+/
-	static class FileView : TreeView
+	class FileView : TreeView
 	{
 		private TreeViewColumn nameColumn, sizeColumn;
 		this(ListStore fileListStore)
 		{
-			setActivateOnSingleClick(true);
+			//setActivateOnSingleClick(true); // *selection* needs single-click, but not full activation
 
 			nameColumn = new TreeViewColumn("Filename", new CellRendererText(), "text", FileGob.TreeColumn.name);
 			appendColumn(nameColumn);
@@ -384,6 +384,8 @@ class TabGob : Box, ArcTab
 					debug writeln("Activated ",iter.getValueString(FileGob.TreeColumn.name),"/",f.name,
 						" (size ",iter.getValueInt(FileGob.TreeColumn.size),"/",f.data.length,")");
 					
+					auto fe = window.batch.openFile(f.name, f.data);
+					if(fe !is null) fe.jumpToSubEntry(null);
 				});
 		}
 	}
