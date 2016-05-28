@@ -19,7 +19,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 module archammer.ui.mainWindow;
 
-debug import std.stdio : writeln;
+import std.stdio : writeln;
 
 import gtk.Dialog, gtk.FileChooserDialog, gtk.FileChooserIF;
 import gtk.Main;
