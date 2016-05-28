@@ -264,20 +264,22 @@ class TabGob : Box, ArcTab
 	class MiniEntry : Box, Batch.FileEntry.SubEntry
 	{
 		Batch.FileEntry fe;
-		RadioButton button;
+		Button button;
 		
 		this(Batch.FileEntry fe)
 		{
 			super(Orientation.HORIZONTAL, 4);
 			this.fe = fe;
-			
-			button = new RadioButton(fe.name.getText());
+
+			button = new Button(fe.name.getText());
 			packStart(button, true, true, 4);
+			button.setRelief(ReliefStyle.NONE);
 			button.addOnClicked(delegate void(Button b)
 				{
 					gob = cast(FileGob)fe.file;
 					updateGobViewer();
 				});
+			button.clicked();
 		}
 		~this()
 		{

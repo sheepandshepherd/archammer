@@ -167,22 +167,26 @@ class TabBm : Box, ArcTab
 	{
 		Batch.FileEntry fe;
 		Image thumbnail;
-		RadioButton button;
+		Button button;
 		
 		this(Batch.FileEntry fe)
 		{
 			super(Orientation.HORIZONTAL, 4);
 			this.fe = fe;
 			thumbnail = new Image(fe.file.thumbnail);
-			packStart(thumbnail, false, false, 0);
+			//packStart(thumbnail, false, false, 0);
 			
-			button = new RadioButton(fe.name.getText());
+			button = new Button(fe.name.getText());
 			packStart(button, true, true, 4);
+			button.setRelief(ReliefStyle.NONE);
+			button.setImage(thumbnail);
+			button.setAlwaysShowImage(true);
 			button.addOnClicked(delegate void(Button b)
-			{
-				bm = cast(FileBm)fe.file;
-				updateViewer();
-			});
+				{
+					bm = cast(FileBm)fe.file;
+					updateViewer();
+				});
+			button.clicked();
 		}
 		~this()
 		{
