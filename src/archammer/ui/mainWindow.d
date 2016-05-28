@@ -207,7 +207,7 @@ class ArcWindow : MainWindow
 			about.setModal(true);
 			about.setProgramName("Arc Hammer");
 			about.setComments("File converter tool for Dark Forces");
-			about.setVersion("0.0.1 (3DO)");
+			about.setVersion("v0.0.5");
 			about.setAuthors(["sheepandshepherd"]);
 			about.setLicenseType(GtkLicense.GPL_2_0);
 			about.setWebsite("https://github.com/sheepandshepherd/archammer");
