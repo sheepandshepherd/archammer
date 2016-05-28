@@ -267,6 +267,12 @@ class TabGob : Box, ArcTab
 	{
 		Batch.FileEntry fe;
 		Button button;
+
+		void select(Button b)
+		{
+			gob = cast(FileGob)fe.file;
+			updateGobViewer();
+		}
 		
 		this(Batch.FileEntry fe)
 		{
@@ -276,11 +282,7 @@ class TabGob : Box, ArcTab
 			button = new Button(fe.name.getText());
 			packStart(button, true, true, 4);
 			button.setRelief(ReliefStyle.NONE);
-			button.addOnClicked(delegate void(Button b)
-				{
-					gob = cast(FileGob)fe.file;
-					updateGobViewer();
-				});
+			button.addOnClicked(&select);
 			button.clicked();
 		}
 		~this()

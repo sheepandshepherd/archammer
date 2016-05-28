@@ -168,7 +168,13 @@ class TabBm : Box, ArcTab
 		Batch.FileEntry fe;
 		Image thumbnail;
 		Button button;
-		
+
+		void select(Button b)
+		{
+			bm = cast(FileBm)fe.file;
+			updateViewer();
+		}
+
 		this(Batch.FileEntry fe)
 		{
 			super(Orientation.HORIZONTAL, 4);
@@ -181,11 +187,7 @@ class TabBm : Box, ArcTab
 			button.setRelief(ReliefStyle.NONE);
 			button.setImage(thumbnail);
 			button.setAlwaysShowImage(true);
-			button.addOnClicked(delegate void(Button b)
-				{
-					bm = cast(FileBm)fe.file;
-					updateViewer();
-				});
+			button.addOnClicked(&select);
 			button.clicked();
 		}
 		~this()

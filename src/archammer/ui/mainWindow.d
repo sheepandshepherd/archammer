@@ -50,6 +50,7 @@ import archammer.ui.tabbm, archammer.ui.tabgob;
 class ArcWindow : MainWindow
 {
 	Statusbar status;
+	Notebook tabs;
 	Batch batch;
 	TabBm tabBm;
 	TabGob tabGob;
@@ -80,7 +81,7 @@ class ArcWindow : MainWindow
 		auto box = new Box(Orientation.VERTICAL, 0);
 		box.packStart(menuBar, false, false, 0);
 		
-		auto tabs = new Notebook;
+		tabs = new Notebook;
 		
 		batch = new Batch(this);
 		tabs.appendPage(batch, "Batch");

@@ -317,7 +317,7 @@ class Batch : Box
 		/// Small version of the FileEntry in the tab for this file type
 		interface SubEntry
 		{
-			
+			void select(Button b);
 		}
 		SubEntry subEntry;
 		File file;
@@ -328,6 +328,14 @@ class Batch : Box
 		
 		ComboBoxText outputType;
 		Button convertButton;
+
+		void jumpToSubEntry(Button button)
+		{
+			if(cast(FileGob)file) window.tabs.setCurrentPage(window.tabGob);
+			else if(cast(FileBm)file) window.tabs.setCurrentPage(window.tabBm);
+			
+			if(subEntry !is null) subEntry.select(null);
+		}
 		
 		this(File file)
 		{
@@ -346,7 +354,12 @@ class Batch : Box
 			string nameText = file.name;
 			name = new Entry(nameText,8);
 			auto viewButton = new Button("View");
-			viewButton.setSensitive(false);
+			bool viewable = cast(FileGob)file || cast(FileBm)file;
+			viewButton.setSensitive(viewable);
+			if(viewable)
+			{
+				viewButton.addOnClicked(&this.jumpToSubEntry);
+			}
 			auto closeButton = new Button("x");
 			closeButton.setName("closeFile"); // red background
 			closeButton.addOnClicked(delegate void(Button button)
