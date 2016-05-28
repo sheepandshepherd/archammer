@@ -70,6 +70,8 @@ import gtk.TreeView;
 import gtk.TreeViewColumn;
 import gtk.CellEditableIF, gtk.CellRenderer, gtk.CellRendererText, gtk.CellRendererCombo, gtk.CellRendererToggle;
 
+import gtk.DragAndDrop, gtk.TargetList, gtk.TargetEntry;
+
 /++
 Tab for extracting files from GOB archives
 
@@ -299,6 +301,7 @@ class TabGob : Box, ArcTab
 	{
 		auto me = new MiniEntry(fe);
 		list.add(me);
+		list.showAll();
 		return me;
 	}
 	

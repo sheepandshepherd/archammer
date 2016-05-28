@@ -41,6 +41,8 @@ import gtk.StyleContext;
 import gdk.Display;
 import gdk.Screen;
 
+import gtk.DragAndDrop, gtk.TargetList, gtk.TargetEntry, gdk.DragContext, gtk.SelectionData;
+
 import archammer.ui.util;
 import archammer.ui.batch;
 import archammer.ui.tabbm, archammer.ui.tabgob;
@@ -61,10 +63,14 @@ class ArcWindow : MainWindow
 		auto screen = display.getDefaultScreen();
 		
 		auto cssProvider = new CssProvider();
-		
 		StyleContext.addProviderForScreen(screen, cssProvider, 600); //GTK_STYLE_PROVIDER_PRIORITY_APPLICATION = 600. how to get this in GTKD?
-		
 		cssProvider.loadFromData(arcCss);
+
+		auto targetEntries = [new TargetEntry("text/uri-list", TargetFlags.OTHER_APP, 0)];
+
+		dragDestSet(DestDefaults.ALL,targetEntries,DragAction.COPY | DragAction.MOVE | DragAction.PRIVATE);
+		addOnDragDrop(&this.dndDrop);
+		addOnDragDataReceived(&this.dndDataReceived);
 		
 		MenuBar menuBar = new MenuBar();
 		
@@ -101,7 +107,47 @@ class ArcWindow : MainWindow
 		showAll();
 	}
 	
-	
+	/// Drag and Drop on main window
+	bool dndDrop(DragContext dc, int x, int y, uint time, Widget w)
+	{
+		debug writeln("dndDrop()");
+		return true;
+	}
+
+	///
+	void dndDataReceived(DragContext dc, int x, int y, SelectionData data, uint info, uint time, Widget w)
+	{
+		import glib.URI;
+		import std.path, std.file;
+		debug writeln("dndDataReceived()");
+		if(info == 0) // make sure it's an external file
+		{
+			string[] uris = data.getUris();
+			assert(uris !is null, "BUG: Non-URI data dropped on window; not sure how to handle it. Should ignore?");
+			if(uris.length == 0)
+			{
+				writeln("BUG: No files in URI drop; reason unknown.");
+				dc.dropFinish(dc, false, time);
+				return;
+			}
+			foreach(u; uris)
+			{
+				string hostname;
+				auto f = URI.filenameFromUri(u,hostname);
+				if(f.exists)
+				{
+					ubyte[] fdata = cast(ubyte[])read(f);
+					batch.openFile(f, fdata);
+				}
+			}
+
+			dc.dropFinish(dc, true, time);
+			return;
+		}
+
+		dc.dropFinish(dc, false, time);
+		return;
+	}
 	
 	
 	class FileMenu : MenuItem

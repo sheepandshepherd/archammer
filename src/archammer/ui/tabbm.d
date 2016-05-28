@@ -206,6 +206,7 @@ class TabBm : Box, ArcTab
 	{
 		auto me = new MiniEntry(fe);
 		list.add(me);
+		list.showAll();
 		return me;
 	}
 	
