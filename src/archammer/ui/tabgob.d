@@ -81,6 +81,7 @@ class TabGob : Box, ArcTab
 	ArcWindow window;
 	
 	Box tools; /// top toolbar
+	Button extractAll;
 	Button openFile;
 	Button extractFile;
 	Button addFile;
@@ -101,6 +102,38 @@ class TabGob : Box, ArcTab
 		this.window = window;
 		
 		tools = new Box(Orientation.HORIZONTAL, 0);
+		extractAll = new Button("Extract all...",delegate void(Button b){
+				import std.path, std.file;
+				import std.string : toUpper;
+				import gtk.FileChooserDialog, gtk.FileChooserIF;
+				import std.typecons : scoped;
+				
+				if(gob is null) return;
+				
+				FileChooserDialog fileChooser = new FileChooserDialog("Extract all to folder", window, FileChooserAction.SELECT_FOLDER);
+				scope(exit) fileChooser.destroy();
+				
+				fileChooser.setModal(true);
+				fileChooser.setLocalOnly(true);
+				//fileChooser.setCurrentName(f.name);
+				//fileChooser.setDoOverwriteConfirmation(true);
+				
+				auto response = fileChooser.run();
+				if(response == ResponseType.OK)
+				{
+					import std.file;
+					/// save to absolute path selected in window
+					auto path = fileChooser.getFilename();
+
+					fileChooser.hide();
+
+					foreach(f; gob.fileGob.files[])
+					{
+						auto fp = buildPath(path,f.name);
+						write(fp,f.data);
+					}
+				}
+			});
 		openFile = new Button("Open",delegate void(Button b){
 				if(gob is null) return;
 				auto iter = fileView.getSelectedIter();
@@ -233,6 +266,7 @@ class TabGob : Box, ArcTab
 				gob.refreshFileListStore();
 			});
 
+		tools.packStart(extractAll,false,false,2);
 		tools.packStart(new Label(""),true,true,0); // temp blank to scoot the rest to the right side
 		foreach(b; [openFile, extractFile, addFile, deleteFile]) tools.packStart(b,false,false,2);
 
