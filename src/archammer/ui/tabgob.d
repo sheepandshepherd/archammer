@@ -70,7 +70,7 @@ import gtk.TreeView;
 import gtk.TreeViewColumn;
 import gtk.CellEditableIF, gtk.CellRenderer, gtk.CellRendererText, gtk.CellRendererCombo, gtk.CellRendererToggle;
 
-import gtk.DragAndDrop, gtk.TargetList, gtk.TargetEntry;
+import gtk.DragAndDrop, gtk.TargetList, gtk.TargetEntry, gdk.DragContext, gtk.SelectionData;
 
 /++
 Tab for extracting files from GOB archives
@@ -100,6 +100,8 @@ class TabGob : Box, ArcTab
 		super(Orientation.VERTICAL, 4);
 		
 		this.window = window;
+
+		auto targetEntries = [new TargetEntry("text/uri-list", TargetFlags.OTHER_APP, 0)];
 		
 		tools = new Box(Orientation.HORIZONTAL, 0);
 		extractAll = new Button("Extract all...",delegate void(Button b){
@@ -288,6 +290,13 @@ class TabGob : Box, ArcTab
 		fileScroll.add(fileView);
 		viewer.add(fileScroll);
 
+
+		// add dragdrop for adding files to the GOB
+		viewer.dragDestSet(DestDefaults.ALL,targetEntries,DragAction.COPY | DragAction.MOVE | DragAction.PRIVATE);
+		viewer.addOnDragDrop(&this.dndDrop);
+		viewer.addOnDragDataReceived(&this.dndDataReceived);
+
+
 		auto pane = new Paned(Orientation.HORIZONTAL);
 		pane.add1(listFrame);
 		pane.add2(viewer);
@@ -380,6 +389,68 @@ class TabGob : Box, ArcTab
 	}
 
 
+
+	bool dndDrop(DragContext dc, int x, int y, uint time, Widget w)
+	{
+		debug writeln("TabGob.dndDrop()");
+		return true;
+	}
+	
+	///
+	void dndDataReceived(DragContext dc, int x, int y, SelectionData data, uint info, uint time, Widget w)
+	{
+		if(gob is null)
+		{
+			dc.dropFinish(dc, true, time);
+			return;
+		}
+		import glib.URI;
+		import std.path, std.file;
+		debug writeln("TabGob.dndDataReceived()");
+		if(info == 0) // make sure it's an external file
+		{
+			string[] uris = data.getUris();
+			assert(uris !is null, "BUG: Non-URI data dropped on window; not sure how to handle it. Should ignore?");
+			if(uris.length == 0)
+			{
+				debug writeln("BUG: No files in URI drop; reason unknown.");
+				dc.dropFinish(dc, false, time);
+				return;
+			}
+			foreach(u; uris)
+			{
+				string hostname;
+				auto f = URI.filenameFromUri(u,hostname);
+				if(f.exists)
+				{
+					import std.algorithm.comparison;
+					
+					auto fb = f.baseName;
+					ubyte[] fdata = cast(ubyte[])read(f);
+					/// deal with filenames longer than 12 chars
+					if(fb.length > 12) // max filename length (8+1+3) for DOS
+					{
+						char[12] tempPath = '\0';
+						tempPath[0..6] = fb[0..6];
+						tempPath[6..9] = "~1.";
+						auto ext = fb.extension;
+						tempPath[9..9+min(ext.length-1, 3)] = ext[1..1+min(ext.length-1, 3)];
+
+						gob.fileGob.addFile(tempPath[], fdata);
+					}
+					else gob.fileGob.addFile(fb, fdata);
+				}
+			}
+
+			gob.refreshFileListStore();
+			
+			dc.dropFinish(dc, true, time);
+			return;
+		}
+		
+		dc.dropFinish(dc, false, time);
+		return;
+	}
 
 
 
