@@ -26,6 +26,7 @@ module archammer.arcgob;
 import archammer.util;
 
 import std.experimental.allocator.mallocator;
+debug import std.stdio : writeln;
 
 import containers.dynamicarray;
 
@@ -52,11 +53,8 @@ class ArcGob : Savable
 		
 		this() @disable;
 
+		/// simple constructor
 		@nogc private this(in char[] name, in ubyte[] data)
-		in
-		{
-			assert(name.length < 13);
-		}
 		body
 		{
 			char[] nameSlice = cast(char[]) Mallocator.instance.allocate(name.length);
@@ -67,6 +65,7 @@ class ArcGob : Savable
 			this.data[] = data[];
 		}
 
+		/// constructor for DF GOB entries only
 		@nogc private this(in ubyte[] entry, in ubyte[] data)
 		in { assert(entry.length == 4+4+13); }
 		body
@@ -156,15 +155,27 @@ class ArcGob : Savable
 	
 	~this()
 	{
-		///Mallocator.instance.deallocate(payload);
+
 	}
-	
+
+	/++
+	Header definitions for determining what type of archive is being loaded from a chunk of data
+	+/
+	enum char[4] headerDFGob = "GOB\x0a";
+	enum char[4] headerJKGob = "GOB\x20";
+
 	static ArcGob loadData(in ubyte[] data)
+	{
+		if(data[0..4]==headerDFGob) return loadDFGob(data);
+		if(data[0..4]==headerJKGob) return loadJKGob(data);
+
+		throw new Exception("Unknown header ("~cast(string)data[0..4]~")");
+	}
+
+	static ArcGob loadDFGob(in ubyte[] data)
 	{
 		import std.bitmanip, std.range;
 		enum EE = Endian.littleEndian;
-		enum char[4] header = "GOB\x0a";
-		if(data[0..4] != cast(ubyte[])header) throw new Exception("Incorrect header ("~cast(string)data[0..4]);
 		size_t manifestPtr = cast(size_t) data[4..8].peek!(uint, EE);
 		ArcGob ret = new ArcGob();
 		
@@ -179,17 +190,37 @@ class ArcGob : Savable
 		}
 		assert(manifest.length == 0);
 		
-		// add payload
-		/++size_t payloadLength = data.length - 8 - manifest.length;
-		ret.payload = cast(ubyte[]) Mallocator.instance.allocate(payloadLength);//(cast(ubyte*) malloc(payloadLength))[0..payloadLength];
-		ubyte* first = ret.payload.ptr;
-		ret.payload[] = data[8..payloadLength+8];
-		assert(first == ret.payload.ptr);+/
-		
 		return ret;
 	}
 	
-	
+	static ArcGob loadJKGob(in ubyte[] data)
+	{
+		import std.bitmanip, std.range;
+		enum EE = Endian.littleEndian;
+
+		const(ubyte)[] header = data;
+		header = header.drop(4);
+		size_t unknownPtr = cast(size_t) header.read!(uint, EE);
+		size_t manifestPtr = cast(size_t) header.read!(uint, EE);
+		size_t numFiles = cast(size_t) header.read!(uint, EE);
+
+		ArcGob ret = new ArcGob();
+
+		const(ubyte)[] manifest = header[0..((128+4+4)*numFiles)];
+		header = header.drop(manifest.length);
+		foreach(fi; 0..numFiles)
+		{
+			size_t ptr = manifest.read!(uint, EE);
+			size_t length = manifest.read!(uint, EE);
+			const(ubyte)[] fileData = data[ptr..ptr+length];
+			ret.addFile(cast(const(char[]))manifest[0..128], fileData );
+			manifest = manifest.drop(128);
+		}
+		assert(manifest.length == 0);
+
+		
+		return ret;
+	}
 	
 }
 
