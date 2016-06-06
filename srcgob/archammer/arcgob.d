@@ -32,7 +32,10 @@ import containers.dynamicarray;
 
 class ArcGob : Savable
 {
-	@property const(SaveFormat[]) saveFormats() { return [ SaveFormat("GOB","GOB (Dark Forces)",&data) ];}
+	@property const(SaveFormat[]) saveFormats() { return [
+			SaveFormat("GOB","GOB (Dark Forces)",&data),
+			SaveFormat("GOB","GOB/GOO (Jedi Knight/MotS)",&dataJK),
+		];}
 	
 	DynamicArray!File files;
 
@@ -146,7 +149,56 @@ class ArcGob : Savable
 		assert(writePos == raw.length);
 		return raw.dup; /// FIXME: change the Savable API to allow for mallocated memory and @nogc
 	}
-	
+
+	void[] dataJK()
+	{
+		import std.bitmanip, std.range;
+		import std.array : Appender;
+		import std.typecons;
+		import std.format;
+		enum EE = Endian.littleEndian;
+
+		size_t size = 4*4  +  files.length * (4 + 4 + 128); // header + ubyte version + manifest offset + file count (in manifest)
+
+		uint pos = cast(uint)size; /// current location; needed for storing file offsets. files start after all the rest
+		uint[] fileOffsets = cast(uint[])Mallocator.instance.allocate(uint.sizeof*files.length);
+		scope(exit) Mallocator.instance.deallocate(fileOffsets);
+		assert(fileOffsets.length == files.length);
+		
+		foreach(fi, f; files[])
+		{
+			size += f.data.length; // payload
+			fileOffsets[fi] = pos;
+			pos += cast(uint)f.data.length;
+		}
+		
+		ubyte[] raw = cast(ubyte[])Mallocator.instance.allocate(size);
+		scope(exit) Mallocator.instance.deallocate(raw);
+		raw[0..4] = cast(ubyte[])headerJKGob[];
+
+		size_t writePos = 4; // files start right after the header and offset
+		raw.write!(uint, EE)(0x14, &writePos);
+		raw.write!(uint, EE)(0xC, &writePos);
+		raw.write!(uint, EE)(cast(uint)files.length, &writePos);
+		foreach(fi, f; files[])
+		{
+			raw.write!(uint, EE)(fileOffsets[fi], &writePos);
+			raw.write!(uint, EE)(cast(uint)f.data.length, &writePos);
+			char[128] name = '\0';
+			assert(f.name.length < 128, format("name length = %d",f.name.length)); // f.name shouldn't include the null terminator (8+1+3 max)
+			name[0..f.name.length] = f.name[];
+			raw[writePos..writePos+128] = cast(ubyte[])name[];
+			writePos += 128;
+		}
+		assert(writePos == 4*4  +  files.length * (4 + 4 + 128));
+		foreach(f; files[])
+		{
+			raw[writePos..writePos+f.data.length] = f.data[];
+			writePos += f.data.length;
+		}
+		assert(writePos == size);
+		return raw.dup; /// FIXME: change the Savable API to allow for mallocated memory and @nogc
+	}
 	
 	private this()
 	{
@@ -196,6 +248,7 @@ class ArcGob : Savable
 	static ArcGob loadJKGob(in ubyte[] data)
 	{
 		import std.bitmanip, std.range;
+		import std.algorithm.searching, std.algorithm.comparison;
 		enum EE = Endian.littleEndian;
 
 		const(ubyte)[] header = data;
@@ -213,7 +266,8 @@ class ArcGob : Savable
 			size_t ptr = manifest.read!(uint, EE);
 			size_t length = manifest.read!(uint, EE);
 			const(ubyte)[] fileData = data[ptr..ptr+length];
-			ret.addFile(cast(const(char[]))manifest[0..128], fileData );
+			auto splitted = manifest[0..128].findSplitBefore(only(cast(const(ubyte))0))[0];
+			ret.addFile(cast(const char[])splitted, fileData );
 			manifest = manifest.drop(128);
 		}
 		assert(manifest.length == 0);
