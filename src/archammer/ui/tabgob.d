@@ -232,18 +232,7 @@ class TabGob : Box, ArcTab
 
 							auto fb = f.baseName;
 							ubyte[] data = cast(ubyte[])read(f);
-							/// deal with filenames longer than 12 chars
-							if(fb.length > 12) // max filename length (8+1+3) for DOS
-							{
-								char[12] tempPath = '\0';
-								tempPath[0..6] = fb[0..6];
-								tempPath[6..9] = "~1.";
-								auto ext = fb.extension;
-								tempPath[9..9+min(ext.length-1, 3)] = ext[1..1+min(ext.length-1, 3)];
-
-								gob.fileGob.addFile(tempPath[], data);
-							}
-							else gob.fileGob.addFile(fb, data);
+							gob.fileGob.addFile(fb, data);
 						}
 					}
 					
@@ -427,18 +416,7 @@ class TabGob : Box, ArcTab
 					
 					auto fb = f.baseName;
 					ubyte[] fdata = cast(ubyte[])read(f);
-					/// deal with filenames longer than 12 chars
-					if(fb.length > 12) // max filename length (8+1+3) for DOS
-					{
-						char[12] tempPath = '\0';
-						tempPath[0..6] = fb[0..6];
-						tempPath[6..9] = "~1.";
-						auto ext = fb.extension;
-						tempPath[9..9+min(ext.length-1, 3)] = ext[1..1+min(ext.length-1, 3)];
-
-						gob.fileGob.addFile(tempPath[], fdata);
-					}
-					else gob.fileGob.addFile(fb, fdata);
+					gob.fileGob.addFile(fb, fdata);
 				}
 			}
 
