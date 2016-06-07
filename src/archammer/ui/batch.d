@@ -229,7 +229,7 @@ class Batch : Box
 	/// 	fileData = the actual data to load, either from the file or from GOB
 	/// 
 	/// Returns: the newly created FileEntry, or null if the file wasn't loadable
-	FileEntry openFile(string filePath, ubyte[] fileData)
+	FileEntry openFile(string filePath, in ubyte[] fileData)
 	{
 		import std.path, std.file;
 		import std.uni : icmp;

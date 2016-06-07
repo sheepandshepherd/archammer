@@ -189,7 +189,7 @@ class ArcBm : Savable
 		return loadData(cast(ubyte[])content);
 	}
 
-	static ArcBm loadData(ubyte[] data, const ArcPal palette = ArcPal.secbase)
+	static ArcBm loadData(in ubyte[] data, const ArcPal palette = ArcPal.secbase)
 	{
 		import std.bitmanip;
 		import std.range;
@@ -199,7 +199,7 @@ class ArcBm : Savable
 		if(data is null || data.length < 0x20) throw new Exception("Invalid data");
 		if(data[0..4] != [0x42,0x4d,0x20,0x1e]) throw new Exception("Not a BM file");
 		
-		ubyte[] p = data[4..$];
+		auto p = data[4..$];
 		
 		ArcBm bm = new ArcBm();
 		

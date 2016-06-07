@@ -50,9 +50,27 @@ class ArcGob : Savable
 	+/
 	static class File
 	{
-		immutable char[] name;
-		ubyte[] data;
-		
+		string _name;
+		ubyte[] _data;
+
+		@property @nogc const string name()
+		{
+			return _name;
+		}
+
+		@property @nogc void name(in char[] value)
+		{
+			if(_name !is null) Mallocator.instance.deallocate(cast(void[])_name);
+
+			char[] nameSlice = cast(char[]) Mallocator.instance.allocate(value.length);
+			nameSlice[] = value[];
+			this.name = cast(string)nameSlice;
+		}
+
+		@property @nogc const(ubyte[]) data()
+		{
+			return _data;
+		}
 		
 		this() @disable;
 
@@ -62,10 +80,10 @@ class ArcGob : Savable
 		{
 			char[] nameSlice = cast(char[]) Mallocator.instance.allocate(name.length);
 			nameSlice[] = name[];
-			this.name = cast(immutable char[])nameSlice;
+			this._name = cast(string)nameSlice;
 
-			this.data = cast(ubyte[])Mallocator.instance.allocate(data.length);
-			this.data[] = data[];
+			this._data = cast(ubyte[])Mallocator.instance.allocate(data.length);
+			this._data[] = data[];
 		}
 
 		/// constructor for DF GOB entries only
@@ -80,7 +98,7 @@ class ArcGob : Savable
 			enum EE = Endian.littleEndian;
 			size_t ptr = cast(size_t) entry[0..4].peek!(uint, EE);
 			size_t length = cast(size_t) entry[4..8].peek!(uint, EE);
-			
+
 			// verify that it's null-terminated before doing anything else with it
 			char[] namez = cast(char[])(entry[8..13+8]);
 			///if(!namez[].canFind('\0')) throw new Exception("Name field without null terminator");
@@ -88,16 +106,16 @@ class ArcGob : Savable
 			char[] nameSlice = fromStringz(namez[].ptr);
 			nameSlice = cast(char[]) Mallocator.instance.allocate(nameSlice.length);
 			nameSlice[] = fromStringz(namez[].ptr)[];
-			name = cast(immutable char[])nameSlice;
+			this._name = cast(string)nameSlice;
 			
-			this.data = cast(ubyte[]) Mallocator.instance.allocate(length);
-			this.data[] = data[ptr..ptr+length];
+			this._data = cast(ubyte[]) Mallocator.instance.allocate(length);
+			this._data[] = data[ptr..ptr+length];
 		}
-		
+
 		@nogc ~this()
 		{
-			Mallocator.instance.deallocate(cast(void[])name);
-			Mallocator.instance.deallocate(data);
+			Mallocator.instance.deallocate(cast(void[])_name);
+			Mallocator.instance.deallocate(_data);
 		}
 	}
 	
