@@ -90,6 +90,20 @@
 				"derelict-fi": "~>2.0.2",
 				"archammer:arcpal": "*",
 			},
-		}
+		},
+		{
+			"name": "arcvoc",
+			"description": "ArcHammer VOC library",
+			"authors": ["sheepandshepherd"],
+			"copyright": "Copyright © 2016 sheepandshepherd",
+			"license": "MIT",
+			"sourcePaths":["srcvoc"],
+			"importPaths":["srcvoc"],
+			"targetPath": "bin",
+			"targetType":"library",
+			"dependencies": {
+				"archammer:arcutil": "*",
+			},
+		},
 	],
 }
