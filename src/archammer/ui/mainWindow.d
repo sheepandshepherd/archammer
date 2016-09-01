@@ -45,6 +45,7 @@ import gtk.DragAndDrop, gtk.TargetList, gtk.TargetEntry, gdk.DragContext, gtk.Se
 
 import archammer.ui.util;
 import archammer.ui.batch;
+import archammer.ui.executor;
 import archammer.ui.tabbm, archammer.ui.tabgob;
 
 class ArcWindow : MainWindow
@@ -52,6 +53,7 @@ class ArcWindow : MainWindow
 	Statusbar status;
 	Notebook tabs;
 	Batch batch;
+	Executor executor;
 	TabBm tabBm;
 	TabGob tabGob;
 	this()
@@ -85,6 +87,9 @@ class ArcWindow : MainWindow
 		
 		batch = new Batch(this);
 		tabs.appendPage(batch, "Batch");
+
+		executor = new Executor(this);
+		tabs.appendPage(executor, "Executor");
 
 		tabGob = new TabGob(this);
 		tabs.appendPage(tabGob, "GOB");
