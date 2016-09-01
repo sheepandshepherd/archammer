@@ -47,6 +47,7 @@ import archammer.ui.util;
 import archammer.ui.batch;
 import archammer.ui.executor;
 import archammer.ui.tabbm, archammer.ui.tabgob;
+import archammer.ui.settings;
 
 class ArcWindow : MainWindow
 {
@@ -56,8 +57,10 @@ class ArcWindow : MainWindow
 	Executor executor;
 	TabBm tabBm;
 	TabGob tabGob;
+	Settings settings;
 	this()
 	{
+		import std.file, std.path;
 		super("Arc Hammer");
 		
 		setDefaultSize(800, 800);
@@ -96,6 +99,15 @@ class ArcWindow : MainWindow
 		
 		tabBm = new TabBm(this);
 		tabs.appendPage(tabBm, "BM");
+
+		settings = new Settings(this);
+		tabs.appendPage(settings, "Settings");
+		auto settingsPath = buildPath(thisExePath.dirName,"settings.yaml");
+		if(isValidPath(settingsPath) && exists(settingsPath))
+		{
+			char[] data = cast(char[])read(settingsPath);
+			settings.load(data);
+		}
 		
 		tabs.addOnSwitchPage(delegate void(Widget w, uint p, Notebook n)
 		{
@@ -111,6 +123,13 @@ class ArcWindow : MainWindow
 		box.packStart(status, false, false, 0);
 		add(box);
 		showAll();
+	}
+
+	~this()
+	{
+		import std.file, std.path;
+		ubyte[] data = settings.save();
+		write(buildPath(thisExePath.dirName,"settings.yaml"), data);
 	}
 	
 	/// Drag and Drop on main window

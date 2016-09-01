@@ -82,9 +82,8 @@ class Executor : Box, ArcTab
 {
 	ArcWindow window;
 
-	Entry dosBoxExeEntry, darkCDEntry, darkExeEntry;
+
 	Box modBox;
-	CheckButton fullscreenCheck;
 
 	this(ArcWindow window)
 	{
@@ -95,35 +94,10 @@ class Executor : Box, ArcTab
 		auto header = new Box(Orientation.HORIZONTAL, 4);
 		packStart(header,false,false,4);
 
-		/// WIP toolbar until Settings page is added:
-		auto dfBox = new Grid();
-		header.packStart(dfBox,true,true,2);
-		dfBox.attach(new Label("DosBox path"),0,0,1,1);
-		dosBoxExeEntry = new Entry("dosbox",255);
-		dosBoxExeEntry.setHexpand(true);
-		dosBoxExeEntry.setTooltipText("Path to DosBox executable");
-		dfBox.attach(dosBoxExeEntry, 1,0,2,1);
-
-		dfBox.attach(new Label("DF CD path"),0,1,1,1);
-		darkCDEntry = new Entry("/home/sheep/Games/DF/",255);
-		darkCDEntry.setHexpand(true);
-		dfBox.attach(darkCDEntry,1,1,2,1);
-		dfBox.attach(new Label("Dark.exe path"),0,2,1,1);
-		darkExeEntry = new Entry("/home/sheep/Games/DF/DARK/DARK.EXE",255);
-		darkExeEntry.setHexpand(true);
-		darkExeEntry.setTooltipText("Path to Dark Forces executable");
-		dfBox.attach(darkExeEntry,1,2,1,1);
-		auto refreshButton = new Button("Refresh Mod List");
-		dfBox.attach(refreshButton,2,2,1,1);
-		refreshButton.addOnClicked((Button b){ refreshModList(); });
-
-		fullscreenCheck = new CheckButton("Fullscreen");
-		dfBox.attach(fullscreenCheck,0,3,3,1);
-
 		auto launchDosBoxButton = new Button("Play Dark Forces >");
 		launchDosBoxButton.setTooltipText("Launch DF through DosBox without any mods");
 		launchDosBoxButton.addOnClicked((Button b){ launchDosBox(null); });
-		dfBox.attach(launchDosBoxButton,0,4,3,1);
+		header.add(launchDosBoxButton);
 
 
 		modBox = new Box(Orientation.VERTICAL, 2);
@@ -208,7 +182,7 @@ class Executor : Box, ArcTab
 		assert(modInfoCache.get("mod",null) is null);
 		modInfoCache[mod] = info;
 
-		string darkDir = darkExeEntry.getText().dirName;
+		string darkDir = window.settings.darkExeEntry.getText().dirName;
 		info.dir = buildPath(darkDir,"mods",mod);
 
 		auto gobsInMod = dirEntries(info.dir,SpanMode.shallow).filter!(de => icmp(de.name.extension, ".gob")==0);
@@ -335,7 +309,7 @@ class Executor : Box, ArcTab
 		modFrames.length = 0;
 		clearModInfoCache();
 
-		string darkDir = darkExeEntry.getText().dirName;
+		string darkDir = window.settings.darkExeEntry.getText().dirName;
 		string modsPath = buildPath(darkDir,"mods");
 		if(isValidPath(modsPath) && exists(modsPath))
 		{
@@ -368,23 +342,23 @@ class Executor : Box, ArcTab
 		import std.uni : icmp;
 		import std.string : join;
 
-		string darkExe = darkExeEntry.getText();
+		string darkExe = window.settings.darkExeEntry.getText();
 		if(!darkExe.isValidPath || !darkExe.exists) return;
-		string darkDir = darkExeEntry.getText().dirName; /// the directory DARK.EXE is in
+		string darkDir = window.settings.darkExeEntry.getText().dirName; /// the directory DARK.EXE is in
 
 		/// dosbox "darkDir/DARK.EXE" -c "mount D: cdDir/" -exit
 		if(info is null)
 		{
 			// launch vanilla DF without any file copies
 			string[] proc = [
-				dosBoxExeEntry.getText(),
+				window.settings.dosBoxExeEntry.getText(),
 				format(`"%s"`,darkExe),
-				format(`-c "mount D %s"`, darkCDEntry.getText()),
+				format(`-c "mount D %s"`, window.settings.darkCDEntry.getText()),
 				"-exit"
 			];
 
 			/// TODO: make it a setting
-			if(fullscreenCheck.getActive()) proc ~= "-fullscreen";
+			if(window.settings.fullscreenCheck.getActive()) proc ~= "-fullscreen";
 
 			auto cmd = proc.join(" ");
 			debug writeln("Executing: ", cmd);
@@ -410,8 +384,8 @@ class Executor : Box, ArcTab
 
 			/// dosbox -c "mount D: cdDir/" -c "mount C: darkDir/" -c "C:" -c "DARK.EXE -u~.gob" -c "exit"
 			string[] proc = [
-				dosBoxExeEntry.getText(),
-				format(`-c "mount D %s"`, darkCDEntry.getText()),
+				window.settings.dosBoxExeEntry.getText(),
+				format(`-c "mount D %s"`, window.settings.darkCDEntry.getText()),
 				format(`-c "mount C %s"`, darkDir),
 				`-c "C:"`,
 				format(`-c "DARK.EXE -u%s"`, info.gob),
@@ -419,7 +393,7 @@ class Executor : Box, ArcTab
 			];
 
 			/// TODO: make it a setting
-			if(fullscreenCheck.getActive()) proc ~= "-fullscreen";
+			if(window.settings.fullscreenCheck.getActive()) proc ~= "-fullscreen";
 
 			auto cmd = proc.join(" ");
 			debug writeln("Executing: ", cmd);
