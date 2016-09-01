@@ -38,6 +38,7 @@ void main(string[] args)
 	debug writeln("Starting ArcHammer GTK-D UI...");
 	Main.init(args);
 	auto window = new ArcWindow();
+	scope(exit) object.destroy(window); // make sure it's destroyed deterministically, mainly for saving settings
 	Main.run();
 }
 
