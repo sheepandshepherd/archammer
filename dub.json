@@ -14,7 +14,8 @@
 		"archammer:arc3do": "*",
 		"archammer:arcpal": "*",
 		"archammer:arcbm": "*",
-		"gtk-d": "~>3.3.1"
+		"gtk-d": "~>3.3.1",
+		"dyaml": "~>0.5.3",
 	},
 	"subPackages": [
 		{
