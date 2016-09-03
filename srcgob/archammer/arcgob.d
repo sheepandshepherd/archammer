@@ -25,6 +25,9 @@ module archammer.arcgob;
 
 import archammer.util;
 
+import std.algorithm.iteration;
+import std.conv : text;
+import std.traits : EnumMembers;
 import std.experimental.allocator.mallocator;
 debug import std.stdio : writeln;
 
@@ -42,6 +45,13 @@ class ArcGob : Savable
 	void addFile(in char[] name, in ubyte[] data)
 	{
 		auto f = new File(name, data);
+		files.insert(f);
+	}
+
+	/// add a file from an LFD
+	void addFile(in char[] name, in LfdType type, in ubyte[] data)
+	{
+		auto f = new File(name, type, data);
 		files.insert(f);
 	}
 	
@@ -82,6 +92,20 @@ class ArcGob : Savable
 			nameSlice[] = name[];
 			this._name = cast(string)nameSlice;
 
+			this._data = cast(ubyte[])Mallocator.instance.allocate(data.length);
+			this._data[] = data[];
+		}
+
+		/// simple constructor for LFD entries only
+		@nogc private this(in char[] name, LfdType type, in ubyte[] data)
+		body
+		{
+			char[] nameSlice = cast(char[]) Mallocator.instance.allocate(name.length+4); // +extension
+			nameSlice[0..name.length] = name[];
+			nameSlice[name.length] = '.';
+			nameSlice[name.length+1..$] = LfdExtensionName[type];
+			this._name = cast(string)nameSlice;
+			
 			this._data = cast(ubyte[])Mallocator.instance.allocate(data.length);
 			this._data[] = data[];
 		}
@@ -233,11 +257,13 @@ class ArcGob : Savable
 	+/
 	enum char[4] headerDFGob = "GOB\x0a";
 	enum char[4] headerJKGob = "GOB\x20";
+	enum char[4] headerLfd = "RMAP";
 
 	static ArcGob loadData(in ubyte[] data)
 	{
 		if(data[0..4]==headerDFGob) return loadDFGob(data);
 		if(data[0..4]==headerJKGob) return loadJKGob(data);
+		if(data[0..4]==headerLfd) return loadLfd(data);
 
 		throw new Exception("Unknown header ("~cast(string)data[0..4]~")");
 	}
@@ -291,6 +317,105 @@ class ArcGob : Savable
 		assert(manifest.length == 0);
 
 		
+		return ret;
+	}
+
+	/// Limited types allowed by LFD archives
+	enum LfdType : ubyte
+	{
+		ANIM,
+		DELT,
+		FILM,
+		FONT,
+		GMID,
+		PLTT,
+		VOIC
+	}
+
+	/// Blasphemous duplication because it's annoying to convert enum names to text in code
+	static immutable char[4][7] LfdTypeFullName =
+	[
+		"ANIM",
+		"DELT",
+		"FILM",
+		"FONT",
+		"GMID",
+		"PLTT",
+		"VOIC"
+	];
+
+	/// Alternate file extensions for LFD types, to fit with the DOS file system
+	static immutable string[7] LfdExtensionName =
+	[
+		"ANM",
+		"DLT",
+		"FLM",
+		"FON",
+		"GMD",
+		"PLT",
+		"VOC"
+	];
+
+	@nogc @safe pure nothrow public static
+	bool getLfdType(in char[4] name, out LfdType type)
+	{
+		import std.meta, std.traits, std.typecons;
+		import std.conv : text;
+		foreach(ti, T; EnumMembers!LfdType)
+		{
+			if(name[0..4] == LfdTypeFullName[ti][0..4])
+			{
+				type = T;
+				return true;
+			}
+		}
+		return false;
+	}
+
+	static ArcGob loadLfd(in ubyte[] data)
+	{
+		import std.bitmanip, std.range;
+		import std.algorithm.searching, std.algorithm.comparison;
+		import std.format : format;
+		enum EE = Endian.littleEndian;
+
+		if(data is null || data.length < 16) return null;
+
+		auto rmapLength = data[12..16].peek!(uint,EE);
+		if(rmapLength % 16 != 0) throw new Exception("Invalid LFD header length");
+		uint numFiles = rmapLength / 16;
+		if(rmapLength+16 > data.length) throw new Exception(format(
+				"LFD header is incomplete; %d bytes given by RMAP, %d bytes left", rmapLength, data.length-16));
+
+		uint filesLength = 0;
+		foreach(fi; 0..numFiles)
+		{
+			size_t lengthOffset = 16+(fi*16)+12;
+			filesLength += data[lengthOffset..lengthOffset+4].peek!(uint,EE);
+		}
+		if(filesLength+rmapLength+16 > data.length) throw new Exception(format(
+				"LFD payload is incomplete; %d bytes given by file entries, %d bytes left",filesLength, data.length-16-rmapLength));
+
+		ArcGob ret = new ArcGob();
+
+		const(ubyte)[] payload = data[rmapLength+16..$];
+		foreach(fi; 0..numFiles)
+		{
+			LfdType type;
+			immutable char[4] typeName = cast(const(char[]))(payload[0..4]);
+			bool valid = getLfdType(typeName, type);
+			if(!valid) throw new Exception("Invalid LFD type <"~typeName[]~">");
+
+			auto zi = payload[4..12].countUntil(ubyte(0)); // 0 terminator
+			if(zi == -1) zi = 8;
+			const(char[]) name = cast(const(char[]))(payload[4..4+zi]);
+
+			uint length = payload[12..16].peek!(uint,EE);
+
+			ret.addFile(name, type, payload[16..16+length]);
+			payload = payload[16+length..$];
+		}
+
 		return ret;
 	}
 	

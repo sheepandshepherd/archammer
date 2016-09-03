@@ -141,8 +141,9 @@ static:
 		texture.add("*.[gG][iI][fF]"); /// TODO: get from FreeImage instead of hard-coding
 
 		arcGob = new ArcFilter();
-		arcGob.setName("Archive (DF/JK/MotS) - *.GOB; *.GOO");
+		arcGob.setName("Archive (DF/JK/MotS) - *.GOB; *.GOO; *.LFD");
 		arcGob.add("*.[gG][oO][bBoO]");
+		arcGob.add("*.[lL][fF][dD]");
 	}
 }
 
