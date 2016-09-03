@@ -241,6 +241,45 @@ class ArcGob : Savable
 		assert(writePos == size);
 		return raw.dup; /// FIXME: change the Savable API to allow for mallocated memory and @nogc
 	}
+
+	/// Returns whether this archive matches the spec for DFBRIEF.LFD
+	@property public
+	bool isDfbrief()
+	{
+		import std.algorithm.searching;
+		import std.uni : icmp;
+
+		bool ret = true;
+
+		/// files that must be present
+		static immutable string[4] matches =
+		[
+			"brf-jan.plt",
+			"cursor.dlt",
+			"guns.anm",
+			"items.anm"
+		];
+
+		bool[matches.length] found = false;
+
+		foreach(f; files[])
+		{
+			foreach(mi, m; matches[])
+			{
+				if(!found[mi] && icmp(m, f.name)==0) found[mi] = true;
+			}
+		}
+		foreach(bool f; found)
+		{
+			ret = ret && f;
+		}
+		/+foreach(m; matches[])
+		{
+			ret = ret && files[].canFind!(f => icmp(f.name, m)==0);
+		}+/
+
+		return ret;
+	}
 	
 	private this()
 	{
