@@ -118,7 +118,7 @@ class Executor : Box, ArcTab
 		auto vs = modInfoCache.values;
 		foreach(ModInfo mi; vs)
 		{
-			Mallocator.instance.dispose(mi);
+			object.destroy(mi);
 		}
 		modInfoCache = null;
 		assert(modInfoCache.length == 0);
@@ -178,43 +178,58 @@ class Executor : Box, ArcTab
 		import std.uni : icmp;
 		import std.range : array;
 
-		ModInfo info = Mallocator.instance.make!ModInfo();
+		ModInfo info = new ModInfo();
 		assert(modInfoCache.get("mod",null) is null);
 		modInfoCache[mod] = info;
 
 		string darkDir = window.settings.darkExeEntry.getText().dirName;
-		info.dir = buildPath(darkDir,"mods",mod);
+		info.dir = buildPath(darkDir,"mods",mod).idup;
 
 		auto gobsInMod = dirEntries(info.dir,SpanMode.shallow).filter!(de => icmp(de.name.extension, ".gob")==0);
 		if(!gobsInMod.empty)
 		{
-			info.gob = gobsInMod.front.name.baseName;
+			info.gob = gobsInMod.front.name.baseName.idup;
 		}
 
 		auto lfdsInMod = dirEntries(info.dir,SpanMode.shallow).filter!(de => icmp(de.name.extension, ".lfd")==0).array;
-		if(lfdsInMod.length == 1)
-		{
-			info.dfbrief = lfdsInMod[0].name.baseName;
-		}
-		else if(lfdsInMod.length > 1)
+		if(lfdsInMod.length >= 1)
 		{
 			import std.algorithm.searching, std.uni, std.string;
-			/// TODO: better way to determine the briefing file would be to open the LFDs and check for briefings.
-			/// until there's an LFD loader, pick the one that contains the word "brief"
-			auto index = lfdsInMod[].countUntil!((DirEntry lfd) =>
-				(   indexOf(lfd.name.baseName, "brief", CaseSensitive.no) != -1   ));
-			if(index == -1)
+			// determine which LFD (if any) should be DFBRIEF.LFD by looking inside,
+			// and put the rest in general files list
+			foreach(ref DirEntry de; lfdsInMod[])
 			{
-				window.batch.showErrorDialog("LFD Error", mod,
-					"This mod contains multiple LFDs, but the briefing file couldn't be determined.");
-				foreach(de; lfdsInMod[]) info.otherFiles ~= de.name.baseName;
-			}
-			else
-			{
-				info.dfbrief = lfdsInMod[index];
-				foreach(li, de; lfdsInMod[])
+				ubyte[] lfdData = cast(ubyte[])read(de.name);
+				ArcGob lfd;
+				try
 				{
-					if(li != index) info.otherFiles ~= de.name.baseName;
+					lfd = ArcGob.loadLfd(lfdData);
+					if(lfd is null) throw new Exception("LFD contains no data at all");
+				}
+				catch(Exception e)
+				{
+					window.batch.showErrorDialog("LFD Error",
+						"Unable to load LFD <"~de.name.baseName~">: ",e.msg);
+					continue;
+				}
+				//scope(exit) lfd.destroy(); // Segmentation fault. Fine, GC will collect it later anyway.
+
+				if(lfd.isDfbrief)
+				{
+					if(info.dfbrief is null)
+					{
+						info.dfbrief = de.name.baseName.idup;
+					}
+					else
+					{
+						window.batch.showErrorDialog("Mod Error", "Multiple DFBRIEFs in "~mod, format(
+								"%s and %s both contain briefing/PDA files, which can only be loaded correctly from a single \"DFBRIEF.LFD\" file.",
+								info.dfbrief, de.name.baseName));
+					}
+				}
+				else
+				{
+					info.otherFiles ~= de.name.baseName.idup;
 				}
 			}
 		}
@@ -242,11 +257,14 @@ class Executor : Box, ArcTab
 		{
 			if(!exists(darkDir)) throw new FileException(darkDir,"Dark Forces directory does not exist!");
 
-			this.darkDir = darkDir;
+			this.darkDir = darkDir.idup;
 			this.leaveDFBrief = leaveDFBrief;
-			filesToDelete = [modGob, "DRIVE.CD"];
+			filesToDelete = [modGob.idup, "DRIVE.CD"];
 			if(!leaveDFBrief) filesToDelete ~= "DFBRIEF.LFD";
-			if(otherFiles !is null) filesToDelete ~= otherFiles;
+			foreach(of; otherFiles[])
+			{
+				filesToDelete ~= of.idup;
+			}
 
 			string modsDir = buildPath(darkDir,"mods");
 			if(!exists(modsDir)) mkdir(modsDir);
