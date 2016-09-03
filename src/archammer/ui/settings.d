@@ -104,19 +104,23 @@ class Settings : Box, ArcTab
 		dosBoxExeEntry = new Entry(dosboxDefault,255);
 		dosBoxExeEntry.setHexpand(true);
 		dosBoxExeEntry.setTooltipText("Path to DosBox executable");
+		dosBoxExeEntry.addOnChanged(e=>window.saveSettings());
 		dfBox.attach(dosBoxExeEntry, 1,0,2,1);
 		
 		dfBox.attach(new Label("DF CD path: "),0,1,1,1);
 		darkCDEntry = new Entry("",255);
 		darkCDEntry.setHexpand(true);
+		darkCDEntry.addOnChanged(e=>window.saveSettings());
 		dfBox.attach(darkCDEntry,1,1,2,1);
 		dfBox.attach(new Label("Dark.exe path: "),0,2,1,1);
 		darkExeEntry = new Entry("",255);
 		darkExeEntry.setHexpand(true);
 		darkExeEntry.setTooltipText("Path to Dark Forces executable");
+		darkExeEntry.addOnChanged(e=>window.saveSettings());
 		dfBox.attach(darkExeEntry,1,2,2,1);
 		
 		fullscreenCheck = new CheckButton("Fullscreen");
+		fullscreenCheck.addOnClicked(e=>window.saveSettings());
 		dfBox.attach(fullscreenCheck,0,3,3,1);
 		// *************************************************************************************************************
 

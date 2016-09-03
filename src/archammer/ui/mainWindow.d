@@ -127,6 +127,11 @@ class ArcWindow : MainWindow
 
 	~this()
 	{
+
+	}
+
+	void saveSettings()
+	{
 		import std.file, std.path;
 		ubyte[] data = settings.save();
 		write(buildPath(thisExePath.dirName,"settings.yaml"), data);
