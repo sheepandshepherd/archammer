@@ -145,7 +145,7 @@ class Settings : Box, ArcTab
 		dumper.resolver = new Resolver();
 		auto rep = new Representer();
 		rep.defaultScalarStyle = ScalarStyle.Plain;
-		rep.defaultCollectionStyle = CollectionStyle.Flow;
+		rep.defaultCollectionStyle = CollectionStyle.Block;
 		dumper.representer = rep;
 		dumper.dump(n);
 
