@@ -8,14 +8,14 @@
 	"targetPath": "bin",
 	"copyFiles":["res/*","LICENSE*","README*"],
 	"dependencies": {
-		"derelict-assimp3": "~>1.0.1",
+		"derelict-assimp3": "~>1.3.0",
 		"archammer:arcutil": "*",
 		"archammer:arcgob": "*",
 		"archammer:arc3do": "*",
 		"archammer:arcpal": "*",
 		"archammer:arcbm": "*",
-		"gtk-d": "~>3.3.1",
-		"dyaml": "~>0.5.3",
+		"gtk-d": "~>3.5.1",
+		"dyaml-yamlserialized": "~>0.6.0",
 	},
 	"subPackages": [
 		{
@@ -29,7 +29,7 @@
 			"targetPath": "bin",
 			"targetType":"library",
 			"dependencies": {
-				"emsi_containers": "~>0.4.3",
+				"emsi_containers": "~>0.5.3",
 			},
 		},
 		{
@@ -58,8 +58,8 @@
 			"targetType":"library",
 			"dependencies": {
 				"archammer:arcutil": "*",
-				"derelict-assimp3": "~>1.0.1",
-				"pegged": "~>0.3.2",
+				"derelict-assimp3": "~>1.3.0",
+				"pegged": "~>0.3.3",
 			},
 		},
 		{
@@ -88,7 +88,7 @@
 			"targetType":"library",
 			"dependencies": {
 				"archammer:arcutil": "*",
-				"derelict-fi": "~>2.0.2",
+				"derelict-fi": "~>2.0.3",
 				"archammer:arcpal": "*",
 			},
 		},
