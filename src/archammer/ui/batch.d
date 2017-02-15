@@ -201,7 +201,7 @@ class Batch : Box
 			/// load each
 			auto list = fileChooser.getFiles();
 			scope(exit) list.free(); /// ObjectGs get `unref`ed by the D destructor.
-			File[] files = list.toArray!File();
+			gio.File.File[] files = list.toArray!(gio.File.File)();
 			
 			string[] paths = files.map!(f=>f.getPath()).array;
 			
@@ -471,7 +471,7 @@ abstract class File
 	{
 		import std.path;
 		if(path is null) return null;
-		return stripExtension(baseName(path));
+		return stripExtension(std.path.baseName(path));
 	}
 	
 	/++

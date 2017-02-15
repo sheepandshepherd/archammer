@@ -296,7 +296,7 @@ class Executor : Box, ArcTab
 			// This should work on case-sensitive Posix because the files were copied using the same case as in the list
 			foreach(f; filesToDelete)
 			{
-				remove(buildPath(darkDir, f));
+				std.file.remove(buildPath(darkDir, f));
 			}
 
 			// return all files in backupDir back to darkDir
