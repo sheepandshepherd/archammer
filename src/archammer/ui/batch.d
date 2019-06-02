@@ -197,11 +197,10 @@ class Batch : Box
 			import std.algorithm.iteration;
 			import std.range : array;
 			import glib.ListSG;
-			import gio.File, gio.FileIF;
 			/// load each
 			auto list = fileChooser.getFiles();
 			scope(exit) list.free(); /// ObjectGs get `unref`ed by the D destructor.
-			gio.File.File[] files = list.toArray!(gio.File.File)();
+			FileIF[] files = (cast(FileIF*)list.data)[0..list.length];
 			
 			string[] paths = files.map!(f=>f.getPath()).array;
 			
@@ -594,7 +593,7 @@ class FilePal : File
 	this(string path, ArcPal file)
 	{
 		import std.range;
-		import std.c.stdlib : malloc, free;
+		import core.stdc.stdlib : malloc, free;
 		super(path);
 		this.file = file;
 		auto palBm = ArcBm.paletteBm(file);

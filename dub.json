@@ -14,8 +14,8 @@
 		"archammer:arc3do": "*",
 		"archammer:arcpal": "*",
 		"archammer:arcbm": "*",
-		"gtk-d": "~>3.5.1",
-		"dyaml-yamlserialized": "~>0.6.0",
+		"gtk-d": "~>3.9.0",
+		"asdf": "~>0.4.6",
 	},
 	"subPackages": [
 		{
@@ -29,7 +29,7 @@
 			"targetPath": "bin",
 			"targetType":"library",
 			"dependencies": {
-				"emsi_containers": "~>0.5.3",
+				"emsi_containers": "~>0.8.0-alpha.15",
 			},
 		},
 		{

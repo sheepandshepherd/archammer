@@ -35,8 +35,7 @@ import archammer.ui.batch;
 import archammer.util;
 import archammer.arcgob;
 
-import yaml;
-alias YamlNode = dyaml.node.Node;
+import asdf;
 
 import gtk.MessageDialog;
 import gtk.Menu;
@@ -80,6 +79,10 @@ import gtk.DragAndDrop, gtk.TargetList, gtk.TargetEntry, gdk.DragContext, gtk.Se
 
 class Settings : Box, ArcTab
 {
+	version(Win32) static immutable string dosboxDefault = `C:\Program Files\DOSBox\DOSBox.exe`;
+	else version(Win64) static immutable string dosboxDefault = `C:\Program Files (x86)\DOSBox\DOSBox.exe`;
+	else static immutable string dosboxDefault = "dosbox";
+
 	ArcWindow window;
 
 	Entry dosBoxExeEntry, darkCDEntry, darkExeEntry;
@@ -97,10 +100,7 @@ class Settings : Box, ArcTab
 		packStart(dfFrame,true,true,4);
 
 		dfBox.attach(new Label("DosBox path: "),0,0,1,1);
-		string dosboxDefault;
-		version(Win32) dosboxDefault = `C:\Program Files\DOSBox\DOSBox.exe`;
-		else version(Win64) dosboxDefault = `C:\Program Files (x86)\DOSBox\DOSBox.exe`;
-		else dosboxDefault = "dosbox";
+
 		dosBoxExeEntry = new Entry(dosboxDefault,255);
 		dosBoxExeEntry.setHexpand(true);
 		dosBoxExeEntry.setTooltipText("Path to DosBox executable");
@@ -128,52 +128,44 @@ class Settings : Box, ArcTab
 
 	}
 
+	static struct Data
+	{
+		string dosboxPath = dosboxDefault;
+		string dfPath = "";
+		string cdPath = "";
+		bool fullscreen = false;
+	}
+
 	public void load(in char[] source)
 	{
 		char[] str = Mallocator.instance.makeArray!char(source.length);
 		scope(exit) Mallocator.instance.deallocate(cast(void[])str);
 		str[] = source[];
-		auto loader = Loader.fromString(str);
-		auto root = loader.load();
-		load(root);
+		Data d = source.deserialize!Data;
+		load(d);
 	}
 	public ubyte[] save()
 	{
-		auto n = getYamlData();
-
-		import dyaml.stream;
-		auto stream = new YMemoryStream();
-		
-		auto dumper = Dumper(stream);
-		dumper.explicitStart = false;
-		dumper.resolver = new Resolver();
-		auto rep = new Representer();
-		rep.defaultScalarStyle = ScalarStyle.Plain;
-		rep.defaultCollectionStyle = CollectionStyle.Block;
-		dumper.representer = rep;
-		dumper.dump(n);
-
-		return stream.data;
+		auto j = getData().serializeToJson();
+		return cast(ubyte[])j;
 	}
 
-	private void load(YamlNode n)
+	private void load(Data d)
 	{
-		if(n.containsKey("dosboxPath")) dosBoxExeEntry.setText(n["dosboxPath"].as!string);
-		if(n.containsKey("dfPath")) darkExeEntry.setText(n["dfPath"].as!string);
-		if(n.containsKey("cdPath")) darkCDEntry.setText(n["cdPath"].as!string);
-		if(n.containsKey("fullscreen")) fullscreenCheck.setActive(n["fullscreen"].as!bool);
+		if(d.dosboxPath) dosBoxExeEntry.setText(d.dosboxPath);
+		if(d.dfPath) darkExeEntry.setText(d.dfPath);
+		if(d.cdPath) darkCDEntry.setText(d.cdPath);
+		fullscreenCheck.setActive(d.fullscreen);
 	}
-	private YamlNode getYamlData()
+	private Data getData()
 	{
-		YamlNode[string] nodes;
-		nodes["dosboxPath"] = YamlNode(dosBoxExeEntry.getText());
-		nodes["dfPath"] = YamlNode(darkExeEntry.getText());
-		nodes["cdPath"] = YamlNode(darkCDEntry.getText());
-		nodes["fullscreen"] = YamlNode(fullscreenCheck.getActive());
+		Data d;
+		d.dosboxPath = dosBoxExeEntry.getText();
+		d.dfPath = darkExeEntry.getText();
+		d.cdPath = darkCDEntry.getText();
+		d.fullscreen = fullscreenCheck.getActive();
 
-		YamlNode root = YamlNode(nodes);
-
-		return root;
+		return d;
 	}
 
 	override void updateTab()

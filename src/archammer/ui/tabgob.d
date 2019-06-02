@@ -22,6 +22,7 @@ module archammer.ui.tabgob;
 import std.conv : to, text;
 import std.string : toStringz, fromStringz;
 import std.traits : EnumMembers;
+import std.typecons : scoped;
 
 debug import std.stdio : writeln;
 import std.experimental.allocator.mallocator;
@@ -213,11 +214,11 @@ class TabGob : Box, ArcTab
 					import std.algorithm.iteration;
 					import std.range : array;
 					import glib.ListSG;
-					import gio.File, gio.FileIF;
+					import gio.FileIF;
 					/// load each
 					auto list = fileChooser.getFiles();
 					scope(exit) list.free(); /// ObjectGs get `unref`ed by the D destructor.
-					File[] files = list.toArray!File();
+					FileIF[] files = (cast(FileIF*)list.data)[0..list.length];
 					
 					string[] paths = files.map!(f=>f.getPath()).array;
 					

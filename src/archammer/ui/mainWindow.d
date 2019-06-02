@@ -256,7 +256,7 @@ class ArcWindow : MainWindow
 .button#closeFile:active {
 	background-image: linear-gradient(to bottom, #f88, #e55);
 }
-.button#closeFile:insensitive {
+.button#closeFile:disabled {
 	background-image: linear-gradient(to bottom, #fdd, #ebb);
 }
 .button#saveFile {
@@ -265,7 +265,7 @@ class ArcWindow : MainWindow
 .button#saveFile:active {
 	background-image: linear-gradient(to bottom, #8f8, #5e5);
 }
-.button#saveFile:insensitive {
+.button#saveFile:disabled {
 	background-image: linear-gradient(to bottom, #dfd, #beb);
 }`;
 	
